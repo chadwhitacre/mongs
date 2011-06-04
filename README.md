@@ -1,5 +1,8 @@
 Mongs is a MongoDB web viewer. It's named after an old dairy.
 
+Mongs is implemented using the [Aspen web
+framework](git@github.com:whit537/mongs.git).
+
 Installation
 ------------
 
@@ -13,6 +16,3 @@ Installation
     (mongs)$ aspen
     Greetings program! Welcome to port 8080.
 
-
-Mongs is implemented using [the Aspen web
-framework](git@github.com:whit537/mongs.git). 
