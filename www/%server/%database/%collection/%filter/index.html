@@ -4,9 +4,12 @@ import pprint
 import time
 import urllib
 
-import simplejson
+try:            # third-party, faster
+    import simplejson
+except:
+    import json # stdlib (2.6+), slower
 import pymongo
-from aspen.middleware.raised import Response
+from aspen import Response
 from pymongo.objectid import ObjectId, InvalidId
 
 SIZE_THRESHOLD = 2048 # number of bytes above which we link out
@@ -121,57 +124,57 @@ class Pair:
         self.is_indexed = False
 
 
-server = request.environ['urlmap.server']
-database = request.environ['urlmap.database']
-collection = request.environ['urlmap.collection']
-spec = request.environ.get('urlmap.spec', None)
-single = spec is None
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
+filter = request.path['filter']
+page = request.path.get('page', None)
+single = page is None
 filtered = single
 
 if not single:
-    i = int(request.environ['urlmap.i'])
     base = '../..'
-    spec = urllib.unquote_plus(spec).strip()
-    if spec:
+    filter = urllib.unquote_plus(filter).strip()
+    if filter:
         filtered = True
-        if not spec.startswith('{'):
-            spec = spec.decode('base64')
-        spec = simplejson.loads(spec)
+        if not filter.startswith('{'):
+            filter = filter.decode('base64')
+        filter = simplejson.loads(filter)
     else:
-        spec = {}
+        filter = {}
 else:
-    i = 1 
+    page = 1
     base = '..'
-    _id = request.environ['urlmap._id']
+    _id = filter
     try:
         _id = ObjectId(_id)
     except InvalidId:
         pass
-    spec = {"_id": _id}
+    filter = {"_id": _id}
 
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 
-if '_id' not in spec:
-    spec.update({'_id': {'$exists': True}})
+if '_id' not in filter:
+    filter.update({'_id': {'$exists': True}})
 sort = False
-if 'sort' in spec:
-    sort, direction = spec.pop('sort')
-documents = coll.find(spec).sort('_id')
+if 'sort' in filter:
+    sort, direction = filter.pop('sort')
+documents = coll.find(filter).sort('_id')
 if sort:
     documents.sort(sort, direction)
 ndocs = documents.count()
 
-if (i < 1) or (i > ndocs):
+if (page < 1) or (page > ndocs):
     raise Response(404)
 
 prev = None
 next = None
-if i > 1:
-    prev = i - 1
-if i < ndocs:
-    next = i + 1
+if page > 1:
+    prev = page - 1
+if page < ndocs:
+    next = page + 1
 documents.rewind()
-cur = documents.skip(i-1).next()
+cur = documents.skip(page - 1).next()
 
 indices = coll.index_information()
 
@@ -183,7 +186,7 @@ if cur is not None:
         for k,v in sorted(d.iteritems()):
             pair = Pair(base, _id, k, v)
             pair.is_indexed = pair.k in indexed
-            pair.is_filtered = pair.k in spec and pair.k != '_id'
+            pair.is_filtered = pair.k in filter and pair.k != '_id'
             pair.sort = ''
             if pair.k == sort:
                 pair.sort = 'ascending' if direction > 0 else 'descending'
@@ -200,22 +203,22 @@ if cur is not None:
     <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
     <tr class="big collection"><th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th><td>{{ collection }}</td></tr>
     <tr class="big document">
-        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" title="Click for All Documents">Document</a>{% else %}<span>Document{% endif %} <span class="note">highlight = <em>indexed</em></span></th>
+        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" title="Click for All Documents">Document</a>{% else %}<span>Document{% end %} <span class="note">highlight = <em>indexed</em></span></th>
         <td>
             {% if single %}
             <a href="./">{{ _id }}</a>
             {% else %}
-            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
-            {{ i }} of {{ ndocs }}
-            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
-            {% endif %}
+            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% end %} |
+            {{ page }} of {{ ndocs }}
+            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% end %}
+            {% end %}
         </td>
     </tr>
     {% for pair in doc %}
     <tr class="attribute">
-        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% endif %} {% if pair.is_filtered %}filtered{% endif %}">{{ pair.k }}</span></span></th>
-        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% endif %}</td>
+        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% end %} {% if pair.is_filtered %}filtered{% end %}">{{ pair.k }}</span></span></th>
+        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% end %}</td>
     </tr>
-    {% endfor %}
+    {% end %}
 </table>
-{% endblock %} 
+{% end %} 

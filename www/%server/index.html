@@ -1,7 +1,7 @@
 import pymongo
 
 
-server = request.environ['urlmap.server']
+server = request.path['server']
 
 conn = pymongo.Connection(server, slave_okay=True)
 databases = sorted(conn.database_names(), key=lambda a: a.lower())
@@ -16,8 +16,8 @@ databases = sorted(conn.database_names(), key=lambda a: a.lower())
         <td>
             {% for database in databases %}
             <a href="/{{ server }}/{{ database }}/">{{ database }}</a><br />
-            {% endfor %}
+            {% end %}
         </td>
     </tr>
 </table>
-{% endblock %}
+{% end %}

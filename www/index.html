@@ -1,5 +1,7 @@
 
-servers = ['localhost']
+servers = website.conf.mongs.get('servers', 'localhost')
+servers = [server.strip(',') for server in servers.split()]
+servers = [server for server in servers if server]
 servers.sort()
 
 {% extends "base.html" %}

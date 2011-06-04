@@ -1,10 +1,10 @@
 import pymongo
-from aspen.middleware.raised import Response
+from aspen import Response
 
 
-server = request.environ['urlmap.server']
-database = request.environ['urlmap.database']
-collection = request.environ['urlmap.collection']
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
 
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 
@@ -14,7 +14,7 @@ try:
 except StopIteration:
     pass
 else:
-    raise Response(302, [('Location', './/1/')])
+    raise Response(302, headers={'Location': './/1/'})
 
 
 
@@ -29,4 +29,4 @@ else:
         <td>No documents found.</td>
     </tr>
 </table>
-{% endblock %}
+{% end %}

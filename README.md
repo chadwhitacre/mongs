@@ -10,7 +10,7 @@ Installation
     $ cd mongs
     $ virtualenv .
     $ . bin/activate
-    (mongs)$ pip install aspen==0.10.8
+    (mongs)$ pip install -r requirements.txt
     ... blah, blah, blah ...
     (mongs)$ cd www/
     (mongs)$ aspen
