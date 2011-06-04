@@ -1,0 +1,133 @@
+<html>
+    <head>
+        <title>Mongs - MongoDB Viewer</title>
+        <style>
+            BODY {
+                font: normal 9pt/12pt Arial, sans-serif;
+                padding: 10px;
+                margin: 0;
+            }
+            TABLE {
+                border-spacing: 0;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+            }
+            TH, TD {
+                vertical-align: top;
+            }
+            TH {
+                text-align: right;
+                padding: 0;
+                width: 100px;
+                font-weight: normal;
+            }
+            TD {
+                padding: 0 0 0 10px;
+            }
+            TR.big TH {
+                height: 40px;
+                border-right: 2px solid gray;
+            }
+            TR.big TD {
+                padding-top: 10px;
+                font-weight: bold;
+            }
+            TR.big.listing TD {
+                font-weight: normal;
+                padding-bottom: 10px;
+            }
+            TR.big TD,
+            TR.big TH {
+                border-top: 1px solid #CCC ! important;
+            }
+            TR.server TH { border-color: orange; }
+            TR.database TH { border-color: red; }
+            TR.collection TH { border-color: green; }
+            TR.document TH {  border-color: blue; }
+            TR.document TD { font-weight: normal; color: #999; }
+            TR.attribute TH {
+                border-right: 2px solid blue;
+            }
+            TR.attribute TH SPAN {
+                color: #999;
+                padding: 2px 10px;
+            }
+            TR.attribute TD {
+                padding: 2px 10px;
+            }
+            TH {
+                min-width: 110px; /* avoid jumpiness when we pluralize */
+            }
+            TH DIV {
+                position: relative;
+            }
+            TH A,
+            TH SPAN {
+                display: block;
+                padding: 10px;
+                color: black;
+                text-decoration: none;
+            }
+            TH SPAN A {
+                padding: 0;
+            }
+            TR.attribute SPAN.bytes {
+                color: #999;
+            }
+            TR.attribute A {
+                ont: normal 10px/10px Verdana, sans-serif;
+            }
+            TR.attribute TH SPAN.inner {
+                display: inline;
+                margin: 0;
+                padding: 0;
+            }
+            TR.attribute TH SPAN.filtered {
+                color: black;
+            }
+            TR.attribute TH SPAN.ascending:before {
+                content: "\2191\00A0";
+                color: black;
+            } 
+            TR.attribute TH SPAN.descending:before {
+                content: "\2193\00A0";
+                color: black;
+            } 
+            TH SPAN.indexed {
+                background: #FFFE98;
+            }
+            TH SPAN.note {
+                margin: 0;
+                padding: 0;
+                font-size: 9px;
+                line-height: 10px;
+                color: #999;
+                white-space: nowrap; 
+            }
+            PRE {
+                margin: 0 0 1em;
+                padding: 0;
+            }
+        </style>
+        <script src="/jquery-1.4.4.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                function addEss() {
+                    var a = $(this);
+                    var current = a.html();
+                    a.html(current + 's'); 
+                }
+                function removeEss() {
+                    var a = $(this);
+                    var current = a.html();
+                    a.html(current.slice(0, current.length-1));
+                }
+                $('TH A').hover(addEss, removeEss);
+            });
+        </script>
+    </head>
+    <body>
+        {% block content %}{% end %}
+    </body>
+</html>

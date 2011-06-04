@@ -1,0 +1,23 @@
+import pymongo
+
+
+server = request.environ['urlmap.server']
+
+conn = pymongo.Connection(server, slave_okay=True)
+databases = sorted(conn.database_names(), key=lambda a: a.lower())
+
+
+{% extends "base.html" %}
+{% block content %}
+<table>
+    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
+    <tr class="big database listing">
+        <th><span>Databases</span></th>
+        <td>
+            {% for database in databases %}
+            <a href="/{{ server }}/{{ database }}/">{{ database }}</a><br />
+            {% endfor %}
+        </td>
+    </tr>
+</table>
+{% endblock %}

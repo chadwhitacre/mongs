@@ -1,0 +1,20 @@
+import pymongo
+from pymongo.objectid import ObjectId, InvalidId
+
+
+server = request.environ['urlmap.server']
+database = request.environ['urlmap.database']
+collection = request.environ['urlmap.collection']
+_id = request.environ['urlmap._id']
+key = request.environ['urlmap.key']
+
+db = pymongo.Connection(server, slave_okay=True)[database][collection]
+
+_id = request.environ['urlmap._id']
+try:
+    _id = ObjectId(_id)
+except InvalidId:
+    pass
+document = db.find_one(_id)
+value = document[key]
+{{ value }}

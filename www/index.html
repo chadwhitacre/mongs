@@ -1,0 +1,17 @@
+
+servers = ['localhost']
+servers.sort()
+
+{% extends "base.html" %}
+{% block content %}
+<table>
+    <tr class="big server listing">
+        <th><span>Servers</span></th>
+        <td>
+            {% for name in servers %}
+            <a href="/{{ name }}/">{{ name }}</a><br />
+            {% end %}
+        </td>
+    </tr>
+</table>
+{% end %}

@@ -1,0 +1,221 @@
+import datetime 
+import math
+import pprint
+import time
+import urllib
+
+import simplejson
+import pymongo
+from aspen.middleware.raised import Response
+from pymongo.objectid import ObjectId, InvalidId
+
+SIZE_THRESHOLD = 2048 # number of bytes above which we link out
+
+def dt2age(dt):
+    """Given a Unix timestamp or a datetime object, return an age string.
+
+        range                                       denomination    example
+        ======================================================================
+        0-1 second                                 "just a moment"
+        1-59 seconds                                seconds         13 seconds
+        60 sec - 59 min                             minutes         13 minutes
+        60 min - 23 hrs, 59 min                     hours           13 hours
+        24 hrs - 13 days, 23 hrs, 59 min            days            13 days
+        14 days - 27 days, 23 hrs, 59 min           weeks           3 weeks
+        28 days - 12 months, 31 days, 23 hrs, 59 mn months          6 months
+        1 year -                                    years           1 year
+
+    We'll go up to years for now.
+
+    """
+
+    if isinstance(dt, datetime.datetime):
+        timestamp = time.mktime(dt.timetuple())
+
+
+    # Define some helpful constants.
+    # ==============================
+
+    sec =   1
+    min =  60 * sec
+    hr  =  60 * min
+    day =  24 * hr
+    wk  =   7 * day
+    mn  =   4 * wk
+    yr  = 365 * day
+
+
+    # Get the raw age in seconds.
+    # ===========================
+
+    age = time.time() - timestamp
+
+
+    # Convert it to a string.
+    # =======================
+    # We start with the coarsest unit and filter to the finest. Pluralization is
+    # centralized.
+
+    if age < 1:
+        return 'just a moment'
+
+    elif age >= yr:         # years
+        amount = age / yr
+        unit = 'year'
+    elif age >= mn:         # months
+        amount = age / mn
+        unit = 'month'
+    elif age >= (2 * wk):   # weeks
+        amount = age / wk
+        unit = 'week'
+    elif age >= day:        # days
+        amount = age / day
+        unit = 'day'
+    elif age >= hr:         # hours
+        amount = age / hr
+        unit = 'hour'
+    elif age >= min:        # minutes
+        amount = age / min
+        unit = 'minute'
+    else:                   # seconds
+        amount = age
+        unit = 'second'
+
+
+    # Pluralize and return.
+    # =====================
+
+    amount = int(math.floor(amount))
+    if amount != 1:
+        unit += 's'
+    age = ' '.join([str(amount), unit])
+    return age
+
+class Pair:
+    def __init__(self, base, _id, k, v):
+        if isinstance(v, unicode):
+            # lists and dictionaries work for some reason
+            v = v.encode('ASCII', 'replace')
+        if isinstance(v, ObjectId):
+            v = '%s (%s)' % (v, v.generation_time)
+        if isinstance(v, datetime.datetime):
+            v = "%s (%s ago)" % (v.isoformat(), dt2age(v))
+        nv = len(str(v))
+        link = ''
+        if k == '_id':
+            link = "%s/%s/" % (base, _id)
+        elif _id and nv > SIZE_THRESHOLD:
+            v = "%d bytes" % nv
+            link = "%s/%s/%s.txt" % (base, _id, k)
+        else:
+            if not isinstance(v, basestring):
+                v = pprint.pformat(v, indent=1)
+            v = v.replace('<', '&lt;').replace('>', '&gt;')
+            if '\n' in v:
+                v = "<pre>%s</pre>" % v
+
+        self.k = k
+        self.v = v
+        self.monospaced = False
+        self.link = link
+        self.is_indexed = False
+
+
+server = request.environ['urlmap.server']
+database = request.environ['urlmap.database']
+collection = request.environ['urlmap.collection']
+spec = request.environ.get('urlmap.spec', None)
+single = spec is None
+filtered = single
+
+if not single:
+    i = int(request.environ['urlmap.i'])
+    base = '../..'
+    spec = urllib.unquote_plus(spec).strip()
+    if spec:
+        filtered = True
+        if not spec.startswith('{'):
+            spec = spec.decode('base64')
+        spec = simplejson.loads(spec)
+    else:
+        spec = {}
+else:
+    i = 1 
+    base = '..'
+    _id = request.environ['urlmap._id']
+    try:
+        _id = ObjectId(_id)
+    except InvalidId:
+        pass
+    spec = {"_id": _id}
+
+coll = pymongo.Connection(server, slave_okay=True)[database][collection]
+
+if '_id' not in spec:
+    spec.update({'_id': {'$exists': True}})
+sort = False
+if 'sort' in spec:
+    sort, direction = spec.pop('sort')
+documents = coll.find(spec).sort('_id')
+if sort:
+    documents.sort(sort, direction)
+ndocs = documents.count()
+
+if (i < 1) or (i > ndocs):
+    raise Response(404)
+
+prev = None
+next = None
+if i > 1:
+    prev = i - 1
+if i < ndocs:
+    next = i + 1
+documents.rewind()
+cur = documents.skip(i-1).next()
+
+indices = coll.index_information()
+
+indexed = [v['key'][0][0] for v in indices.values()]
+
+if cur is not None:
+    _id = cur .get('_id', '')
+    def gendoc(d):
+        for k,v in sorted(d.iteritems()):
+            pair = Pair(base, _id, k, v)
+            pair.is_indexed = pair.k in indexed
+            pair.is_filtered = pair.k in spec and pair.k != '_id'
+            pair.sort = ''
+            if pair.k == sort:
+                pair.sort = 'ascending' if direction > 0 else 'descending'
+            yield pair
+    doc = gendoc(cur)
+    if single: 
+        doc.next()
+
+    
+{% extends "base.html" %}
+{% block content %}
+<table>
+    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
+    <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
+    <tr class="big collection"><th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th><td>{{ collection }}</td></tr>
+    <tr class="big document">
+        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" title="Click for All Documents">Document</a>{% else %}<span>Document{% endif %} <span class="note">highlight = <em>indexed</em></span></th>
+        <td>
+            {% if single %}
+            <a href="./">{{ _id }}</a>
+            {% else %}
+            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
+            {{ i }} of {{ ndocs }}
+            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
+            {% endif %}
+        </td>
+    </tr>
+    {% for pair in doc %}
+    <tr class="attribute">
+        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% endif %} {% if pair.is_filtered %}filtered{% endif %}">{{ pair.k }}</span></span></th>
+        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% endif %}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %} 

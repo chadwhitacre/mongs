@@ -1,0 +1,32 @@
+import pymongo
+from aspen.middleware.raised import Response
+
+
+server = request.environ['urlmap.server']
+database = request.environ['urlmap.database']
+collection = request.environ['urlmap.collection']
+
+coll = pymongo.Connection(server, slave_okay=True)[database][collection]
+
+documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
+try:
+    document = documents.next()
+except StopIteration:
+    pass
+else:
+    raise Response(302, [('Location', './/1/')])
+
+
+
+{% extends "base.html" %}
+{% block content %}
+<table>
+    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
+    <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
+    <tr class="big collection"><th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th><td>{{ collection }}</td></tr>
+    <tr class="big document">
+        <th><span>Document</span></th>
+        <td>No documents found.</td>
+    </tr>
+</table>
+{% endblock %}
