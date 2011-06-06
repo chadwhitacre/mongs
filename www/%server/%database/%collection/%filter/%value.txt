@@ -2,15 +2,14 @@ import pymongo
 from pymongo.objectid import ObjectId, InvalidId
 
 
-server = request.environ['urlmap.server']
-database = request.environ['urlmap.database']
-collection = request.environ['urlmap.collection']
-_id = request.environ['urlmap._id']
-key = request.environ['urlmap.key']
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
+_id = request.path['filter']
+key = request.path['value'] # derp
 
 db = pymongo.Connection(server, slave_okay=True)[database][collection]
 
-_id = request.environ['urlmap._id']
 try:
     _id = ObjectId(_id)
 except InvalidId:

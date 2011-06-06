@@ -14,7 +14,9 @@ try:
 except StopIteration:
     pass
 else:
-    raise Response(302, headers={'Location': './/1/'})
+    # Aspen as of 0.10.8 chokes on empty path parts, so we have to indicate 
+    # an empty filter with explicit braces.
+    raise Response(302, headers={'Location': './{}/1/'})
 
 
 
