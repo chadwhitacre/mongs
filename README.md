@@ -1,4 +1,4 @@
-Mongs is a MongoDB web viewer. It's named after an old dairy.
+Mongs is a web-based data browser for MongoDB. It's named after an old dairy.
 
 Mongs is implemented using the [Aspen web
 framework](git@github.com:whit537/mongs.git).
