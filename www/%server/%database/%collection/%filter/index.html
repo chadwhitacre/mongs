@@ -1,3 +1,5 @@
+"""Spaghetti! Who likes spaghetti? It's mildly documented spaghetti, at least.
+"""
 import datetime 
 import math
 import pprint
@@ -95,6 +97,9 @@ def dt2age(dt):
     return age
 
 class Pair:
+    """Represent a single key/value pair from a document.
+    """
+
     def __init__(self, base, _id, k, v):
         if isinstance(v, unicode):
             # lists and dictionaries work for some reason
@@ -124,6 +129,10 @@ class Pair:
         self.is_indexed = False
 
 
+
+# Parse input
+# ===========
+
 server = request.path['server']
 database = request.path['database']
 collection = request.path['collection']
@@ -132,7 +141,20 @@ page = request.path.get('page', None)
 single = page is None
 filtered = single
 
-if not single:
+
+# Compute base, filter, and page.
+# ===============================
+# This simplate is symlinked to be called in two contexts:
+#
+# - when a document is specified by a page number into a number of documents 
+#    matched by a filter
+# - when a single document is specified by its _id
+#
+# Base is used to compute links, filter is the query spec, and page is the
+# 1-index into the query results.
+
+if not single:      # /server/database/collection/filter/page/
+    # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
     filter = urllib.unquote_plus(filter).strip()
     if filter:
@@ -142,7 +164,8 @@ if not single:
         filter = simplejson.loads(filter)
     else:
         filter = {}
-else:
+else:               # /server/database/collection/_id/
+    # Convert a request for a specific _id into a filter with one page.
     page = 1
     base = '..'
     _id = filter
@@ -152,50 +175,89 @@ else:
         pass
     filter = {"_id": _id}
 
-coll = pymongo.Connection(server, slave_okay=True)[database][collection]
-
 if '_id' not in filter:
+    # I'm sorry, I forget why I did this. :^(
     filter.update({'_id': {'$exists': True}})
-sort = False
-if 'sort' in filter:
-    sort, direction = filter.pop('sort')
-documents = coll.find(filter).sort('_id')
-if sort:
-    documents.sort(sort, direction)
-ndocs = documents.count()
 
+
+# Load documents.
+# ===============
+# pymongo.Connection advertises that it does connection pooling.
+
+coll = pymongo.Connection(server, slave_okay=True)[database][collection]
+documents = coll.find(filter)
+ndocs = documents.count()
+documents.rewind()
 if (page < 1) or (page > ndocs):
     raise Response(404)
 
-prev = None
-next = None
+
+# Sort.
+# =====
+# The user passes sort in as part of the {filter} hash, which otherwise is a
+# MongoDB query spec.
+
+if 'sort' in filter:
+    sort, direction = filter.pop('sort')
+else:
+    sort = "_id"
+    direction = 1
+documents.sort(sort)
+
+
+# Compute prev/next.
+# ==================
+
+prev = None # or int
+next = None # or int
 if page > 1:
     prev = page - 1
 if page < ndocs:
     next = page + 1
-documents.rewind()
-cur = documents.skip(page - 1).next()
+
+
+# Advance the cursor to the requested document.
+# =============================================
+
+document = documents.skip(page - 1).next()
+
+
+# Compute a set of indexed keys.
+# ==============================
 
 indices = coll.index_information()
+indexed = set()
+for v in indices.values():
+    indexed.add(v['key'][0][0])
 
-indexed = [v['key'][0][0] for v in indices.values()]
 
-if cur is not None:
-    _id = cur .get('_id', '')
-    def gendoc(d):
-        for k,v in sorted(d.iteritems()):
+# Convert the document to a generator for the template.
+# =====================================================
+
+if document is not None: # XXX Can document ever be None?
+    _id = document.get('_id', '')
+    def generate_pairs(document):
+        """Yield key/value pairs for document.
+        """
+        for k,v in sorted(document.iteritems()):
             pair = Pair(base, _id, k, v)
             pair.is_indexed = pair.k in indexed
-            pair.is_filtered = pair.k in filter and pair.k != '_id'
+            pair.is_filtered = False
             pair.sort = ''
-            if pair.k == sort:
-                pair.sort = 'ascending' if direction > 0 else 'descending'
+            if pair.k != '_id':
+                pair.is_filtered = pair.k in filter
+                if pair.k == sort:
+                    pair.sort = 'ascending' if direction > 0 else 'descending'
             yield pair
-    doc = gendoc(cur)
+    pairs = generate_pairs(document)
     if single: 
-        doc.next()
+        # For documents that were specified by an explicit _id, we show
+        # that _id above the rest of the key/values. Advancing the pairs
+        # generator here means that we don't display _id again with the 
+        # rest of the key/values.
+        pairs.next() 
 
-    
+#============================================================================     
 {% extends "base.html" %}
 {% block content %}
 <table>
@@ -214,7 +276,7 @@ if cur is not None:
             {% end %}
         </td>
     </tr>
-    {% for pair in doc %}
+    {% for pair in pairs %}
     <tr class="attribute">
         <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% end %} {% if pair.is_filtered %}filtered{% end %}">{{ pair.k }}</span></span></th>
         <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% end %}</td>
