@@ -1,7 +1,7 @@
 import pymongo
 from pymongo.objectid import ObjectId, InvalidId
 
-
+^L
 server = request.path['server']
 database = request.path['database']
 collection = request.path['collection']
@@ -16,4 +16,4 @@ except InvalidId:
     pass
 document = db.find_one(_id)
 value = document[key]
-{{ value }}
+^L{{ value }}

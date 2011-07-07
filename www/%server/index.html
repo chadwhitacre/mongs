@@ -1,12 +1,12 @@
 import pymongo
 
-
+^L
 server = request.path['server']
 
 conn = pymongo.Connection(server, slave_okay=True)
 databases = sorted(conn.database_names(), key=lambda a: a.lower())
 
-
+^L
 {% extends "base.html" %}
 {% block content %}
 <table>
