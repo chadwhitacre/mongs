@@ -180,6 +180,18 @@ if '_id' not in filter:
     filter.update({'_id': {'$exists': True}})
 
 
+# Sort.
+# =====
+# The user passes sort in as part of the {filter} hash, which otherwise is a
+# MongoDB query spec. Pull sort out after the filter has been decoded but
+# before we actually use it.
+
+if 'sort' in filter:
+    sort = filter.pop('sort')
+else:
+    sort = [("_id", 1)]
+
+
 # Load documents.
 # ===============
 # pymongo.Connection advertises that it does connection pooling.
@@ -187,21 +199,9 @@ if '_id' not in filter:
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 documents = coll.find(filter)
 ndocs = documents.count()
-documents.rewind()
 if (page < 1) or (page > ndocs):
     raise Response(404)
-
-
-# Sort.
-# =====
-# The user passes sort in as part of the {filter} hash, which otherwise is a
-# MongoDB query spec.
-
-if 'sort' in filter:
-    sort, direction = filter.pop('sort')
-else:
-    sort = "_id"
-    direction = 1
+documents.rewind()
 documents.sort(sort)
 
 
