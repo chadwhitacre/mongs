@@ -257,7 +257,10 @@ if document is not None: # XXX Can document ever be None?
         # rest of the key/values.
         pairs.next() 
 
-#============================================================================ ^L
+#============================================================================
+# For some reason under Python2.6 but not 2.7 if the caret-L is on the same
+# line as the commented ====== then we get a SyntaxError. Curious!
+^L
 {% extends "base.html" %}
 {% block content %}
 <table>
