@@ -118,7 +118,7 @@ class Pair:
         else:
             if not isinstance(v, basestring):
                 v = pprint.pformat(v, indent=1)
-            v = v.replace('<', '&lt;').replace('>', '&gt;')
+            v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             if '\n' in v:
                 v = "<pre>%s</pre>" % v
 
