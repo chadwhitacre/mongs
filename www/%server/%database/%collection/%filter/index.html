@@ -3,7 +3,6 @@
 import datetime 
 import math
 import pprint
-import time
 import urllib
 
 try:            # third-party, faster
@@ -16,8 +15,22 @@ from pymongo.objectid import ObjectId, InvalidId
 
 SIZE_THRESHOLD = 2048 # number of bytes above which we link out
 
+def total_seconds(td):
+    """
+    Python 2.7 adds a total_seconds method to timedelta objects.
+    See http://docs.python.org/library/datetime.html#datetime.timedelta.total_seconds
+
+    This function is taken from https://bitbucket.org/jaraco/jaraco.compat/src/e5806e6c1bcb/py26compat/__init__.py#cl-26
+
+    """
+    try:
+        result = td.total_seconds()
+    except AttributeError:
+        result = (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+    return result
+
 def dt2age(dt):
-    """Given a Unix timestamp or a datetime object, return an age string.
+    """Given a Unix timestamp (UTC) or a datetime object, return an age string.
 
         range                                       denomination    example
         ======================================================================
@@ -34,8 +47,8 @@ def dt2age(dt):
 
     """
 
-    if isinstance(dt, datetime.datetime):
-        timestamp = time.mktime(dt.timetuple())
+    if not isinstance(dt, datetime.datetime):
+        dt = datetime.datetime.utcfromtimestamp(dt)
 
 
     # Define some helpful constants.
@@ -53,7 +66,8 @@ def dt2age(dt):
     # Get the raw age in seconds.
     # ===========================
 
-    age = time.time() - timestamp
+    now = datetime.datetime.utcnow()
+    age = total_seconds(now - dt)
 
 
     # Convert it to a string.
