@@ -1,6 +1,6 @@
 """Spaghetti! Who likes spaghetti? It's mildly documented spaghetti, at least.
 """
-import datetime 
+import datetime
 import math
 import pprint
 import urllib
@@ -30,7 +30,8 @@ def total_seconds(td):
     return result
 
 def dt2age(dt):
-    """Given a Unix timestamp (UTC) or a datetime object, return an age string.
+    """Given a Unix timestamp (UTC) or a datetime object, return an age string
+    relative to now.
 
         range                                       denomination    example
         ======================================================================
@@ -44,6 +45,9 @@ def dt2age(dt):
         1 year -                                    years           1 year
 
     We'll go up to years for now.
+
+    Times in the future are indicated by "in (denomination)" and times
+    already passed are indicated by "(denomination) ago".
 
     """
 
@@ -67,7 +71,7 @@ def dt2age(dt):
     # ===========================
 
     now = datetime.datetime.utcnow()
-    age = total_seconds(now - dt)
+    age = total_seconds(abs(now - dt))
 
 
     # Convert it to a string.
@@ -108,7 +112,8 @@ def dt2age(dt):
     if amount != 1:
         unit += 's'
     age = ' '.join([str(amount), unit])
-    return age
+    fmt = 'in {age}' if dt > now else '{age} ago'
+    return fmt.format(age=age)
 
 class Pair:
     """Represent a single key/value pair from a document.
@@ -121,7 +126,7 @@ class Pair:
         if isinstance(v, ObjectId):
             v = '%s (%s)' % (v, v.generation_time)
         if isinstance(v, datetime.datetime):
-            v = "%s (%s ago)" % (v.isoformat(), dt2age(v))
+            v = "%s (%s)" % (v.isoformat(), dt2age(v))
         nv = len(str(v))
         link = ''
         if k == '_id':
@@ -160,7 +165,7 @@ filtered = single
 # ===============================
 # This simplate is symlinked to be called in two contexts:
 #
-# - when a document is specified by a page number into a number of documents 
+# - when a document is specified by a page number into a number of documents
 #    matched by a filter
 # - when a single document is specified by its _id
 #
@@ -264,12 +269,12 @@ if document is not None: # XXX Can document ever be None?
                     pair.sort = 'ascending' if direction > 0 else 'descending'
             yield pair
     pairs = generate_pairs(document)
-    if single: 
+    if single:
         # For documents that were specified by an explicit _id, we show
         # that _id above the rest of the key/values. Advancing the pairs
-        # generator here means that we don't display _id again with the 
+        # generator here means that we don't display _id again with the
         # rest of the key/values.
-        pairs.next() 
+        pairs.next()
 
 #============================================================================
 # For some reason under Python2.6 but not 2.7 if the caret-L is on the same
@@ -300,4 +305,4 @@ if document is not None: # XXX Can document ever be None?
     </tr>
     {% end %}
 </table>
-{% end %} 
+{% end %}
