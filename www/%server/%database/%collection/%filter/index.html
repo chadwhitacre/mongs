@@ -167,6 +167,8 @@ filtered = single
 # Base is used to compute links, filter is the query spec, and page is the
 # 1-index into the query results.
 
+optimize_count = False # If we can, compute the count without filtering.
+
 if not single:      # /server/database/collection/filter/page/
     # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
@@ -178,6 +180,10 @@ if not single:      # /server/database/collection/filter/page/
         filter = simplejson.loads(filter)
     else:
         filter = {}
+    if not filter:
+        # If there is no filter, we can safely compute the count from the 
+        # unfiltered collection, which appears to be O(1) instead of O(N).
+        optimize_count = True
 else:               # /server/database/collection/_id/
     # Convert a request for a specific _id into a filter with one page.
     page = 1
@@ -212,7 +218,7 @@ else:
 
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 documents = coll.find(filter)
-ndocs = documents.count()
+ndocs = coll.count() if optimize_count else documents.count()
 if (page < 1) or (page > ndocs):
     raise Response(404)
 documents.rewind()
@@ -232,6 +238,8 @@ if page < ndocs:
 
 # Advance the cursor to the requested document.
 # =============================================
+# This appears to be O(N), which means it is fast for early pages and slow for
+# late pages.
 
 document = documents.skip(page - 1).next()
 
