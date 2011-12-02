@@ -1,0 +1,3 @@
+import mongs
+^L
+response.body = mongs.get_value(request)
