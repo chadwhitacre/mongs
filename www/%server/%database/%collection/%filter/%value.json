@@ -1,3 +1,8 @@
 import mongs
 ^L
-response.body = mongs.get_value(request)
+value = mongs.get_value(request)
+if isinstance(value, basestring):
+    # Smartly send the user to a text/plain representation, so their in-browser
+    # JSON prettifier doesn't choke.
+    request.redirect("%(value)s.txt" % request.path)
+response.body = value

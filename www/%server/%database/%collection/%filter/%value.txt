@@ -1,2 +1,6 @@
 import mongs
+
+# Never smartly send the user to a json representation. This is the lowest
+# common denominator and should always be available to the user.
+
 ^L{{ mongs.get_value(request) }}
