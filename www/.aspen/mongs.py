@@ -4,6 +4,7 @@ import datetime
 import math
 
 import pymongo
+from pymongo.binary import Binary
 from pymongo.objectid import ObjectId, InvalidId
 
 
