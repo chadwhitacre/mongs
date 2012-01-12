@@ -25,13 +25,8 @@ def get_value(request):
         pass
     document = db.find_one(_id)
     value = document[key]
-
-    # Convert str to unicode.
-    if isinstance(value, Binary):   # Binary gets base64'd
-        value = str(value).encode('base64').decode('ascii')
-    else:                           # Everything else is safely UTF-8'd
-        value = value.decode('utf-8', 'replace')
-
+    if isinstance(value, Binary):
+        value = str(value).encode('base64')
     return value
 
 def total_seconds(td):
