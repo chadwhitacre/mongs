@@ -4,7 +4,6 @@ import datetime
 import math
 
 import pymongo
-from pymongo.binary import Binary
 from pymongo.objectid import ObjectId, InvalidId
 
 
@@ -24,10 +23,7 @@ def get_value(request):
     except InvalidId:
         pass
     document = db.find_one(_id)
-    value = document[key]
-    if isinstance(value, Binary):
-        value = str(value).encode('base64')
-    return value
+    return document[key]
 
 def total_seconds(td):
     """
