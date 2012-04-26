@@ -1,25 +1,110 @@
+import math
+
 import pymongo
 
+
+MB = 1024 ** 2.0
+PIXELS = 100
+
+
+def f2s(n, scale=1.0):
+    """Given float, return str.
+    """
+    out = "%.01f" % (n / scale)
+    if out == "0.0":
+        out = "0&nbsp;&nbsp;"
+    return out
+
+
+class CollectionRow(object):
+
+    def __init__(self, db, dbsize, collname):
+        self.dbsize = dbsize
+        self.name = collname
+        self.stats = stats = db.command({'collstats': collname})
+        self.size = stats['storageSize']
+
+    def format_size(self):
+        total = f2s(self.dbsize, MB).replace("&nbsp;", "N")
+
+        percent = f2s(self.size / self.dbsize * 100)
+        percent = ((5 - len(percent)) * "&nbsp;") + percent
+        left = percent
+
+        absolute = f2s(self.size, MB)
+        absolute = absolute.replace("&nbsp;", "N")
+        absolute = ("&nbsp;" * (len(total) - len(absolute))) + absolute
+        absolute = absolute.replace("N", "&nbsp;")
+        absolute = " %s&nbsp;&nbsp;&nbsp;" % absolute
+        right = absolute
+
+        return left + right
+
 ^L
+
+
 server = request.path['server']
 database = request.path['database']
 
 db = pymongo.Connection(server, slave_okay=True)[database]
-collections = sorted(db.collection_names())
+dbsize = float(db.command({'dbstats': 1})['storageSize'])
+collnames = sorted(db.collection_names())
+collections = [CollectionRow(db, dbsize, collname) for collname in collnames]
+ncollections = len(collections)
 
 ^L
 {% extends "base.html" %}
 {% block content %}
+<style>
+    TR.collection TD.notfirst {
+        border-top: none ! important;
+        padding: 0 1em 0 10px ! important;
+    }
+    TR.collection TD {
+        padding-bottom: 0 ! important;
+    }
+    TR.collection TD.name {
+        width: 1px;
+    }
+    TD.size {
+        width: 1px;
+        padding-right: 1em ! important;
+        padding-left: 10px;
+        font: normal 10pt/12pt "Lucida Mono", Monaco, monospace;
+        text-align: right;
+        white-space: nowrap;
+        font-weight: normal ! important;
+        color: #CCC;
+    }
+    TR.server TD.size {
+        padding-left: 0 ! important;
+        padding-right: 0 ! important;
+        text-align: center;
+    }
+    TD.empty {
+        width: 100%;
+    }
+</style>
 <table>
-    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
-    <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
-    <tr class="big collection listing">
-        <th><span>Collections</span></th>
-        <td>
-            {% for collection in collections %}
-            <a href="/{{ server }}/{{ database }}/{{ collection }}/">{{ collection }}</a><br />
-            {% end %}
-        </td>
+    <tr class="big server">
+        <th><a href="/" title="Click for All Servers">Server</a></th>
+        <td>{{ server }}</td>
+        <td class="size">Size</td>
+        <td class="empty"></td>
     </tr>
+    <tr class="big database">
+        <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
+        <td>{{ database }}</td>
+        <td class="size">&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;&nbsp;{{ f2s(dbsize, MB) }} MB</td>
+        <td class="empty"></td>
+    </tr>
+    {% for i, collection in enumerate(collections) %}
+    <tr class="big collection listing">
+        {% if i == 0 %}<th rowspan="{{ ncollections }}"><span>Collections</span></th>{% end %}
+        <td class="name{% if i > 0 %} notfirst{% end %}"><a href="/{{ server }}/{{ database }}/{{ collection.name }}/">{{ collection.name }}</a></td>
+        <td class="size{% if i > 0 %} notfirst{% end %}">{{ collection.format_size() }}</td>
+        <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
+    </tr>
+    {% end %}
 </table>
 {% end %}
