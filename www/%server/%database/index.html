@@ -10,9 +10,10 @@ PIXELS = 100
 def f2s(n, scale=1.0):
     """Given float, return str.
     """
-    out = "%.01f" % (n / scale)
-    if out == "0.0":
+    if n == 0.0:
         out = "0&nbsp;&nbsp;"
+    else:
+        out = "%.01f" % (n / scale)
     return out
 
 
@@ -40,6 +41,14 @@ class CollectionRow(object):
 
         return left + right
 
+    def format_utilization(self):
+        out = f2s(self.stats['size'] / self.dbsize * 100)
+        out.replace("&nbsp;", "N")
+        out = ("&nbsp;" * (len(out) - 5)) + out
+        out.replace("N", "&nbsp;")
+        return out
+
+
 ^L
 
 
@@ -47,7 +56,7 @@ server = request.path['server']
 database = request.path['database']
 
 db = pymongo.Connection(server, slave_okay=True)[database]
-dbsize = float(db.command({'dbstats': 1})['storageSize'])
+dbsize = float(100) # db.command({'dbstats': 1})['storageSize'])
 collnames = sorted(db.collection_names())
 collections = [CollectionRow(db, dbsize, collname) for collname in collnames]
 ncollections = len(collections)
@@ -66,7 +75,7 @@ ncollections = len(collections)
     TR.collection TD.name {
         width: 1px;
     }
-    TD.size {
+    TD.size, TD.utilization {
         width: 1px;
         padding-right: 1em ! important;
         padding-left: 10px;
@@ -76,9 +85,14 @@ ncollections = len(collections)
         font-weight: normal ! important;
         color: #CCC;
     }
-    TR.server TD.size {
+    TR.server TD.size, 
+    TR.server TD.utilization, 
+    TR.database TD.utilization {
         padding-left: 0 ! important;
         padding-right: 0 ! important;
+        text-align: center;
+    }
+    TR.collection TD.utilization {
         text-align: center;
     }
     TD.empty {
@@ -90,12 +104,14 @@ ncollections = len(collections)
         <th><a href="/" title="Click for All Servers">Server</a></th>
         <td>{{ server }}</td>
         <td class="size">Size on Disk</td>
+        <td class="utilization">Utilization</td>
         <td class="empty"></td>
     </tr>
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
         <td>{{ database }}</td>
         <td class="size">&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;&nbsp;{{ f2s(dbsize, MB) }} MB</td>
+        <td class="utilization">%</td>
         <td class="empty"></td>
     </tr>
     {% for i, collection in enumerate(collections) %}
@@ -103,6 +119,7 @@ ncollections = len(collections)
         {% if i == 0 %}<th rowspan="{{ ncollections }}"><span>Collections</span></th>{% end %}
         <td class="name{% if i > 0 %} notfirst{% end %}"><a href="/{{ server }}/{{ database }}/{{ collection.name }}/">{{ collection.name }}</a></td>
         <td class="size{% if i > 0 %} notfirst{% end %}">{{ collection.format_size() }}</td>
+        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ collection.format_utilization() }}</td>
         <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
     </tr>
     {% end %}
