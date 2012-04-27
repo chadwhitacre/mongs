@@ -55,7 +55,6 @@ class Collection(object):
         """
         out = f2s(self.data_size / dbsize * 100)
         out = out.replace("&nbsp;", "N")
-        print out, len(out)
         out = ("&nbsp;" * (5 - len(out))) + out
         out = out.replace("N", "&nbsp;")
         return out
