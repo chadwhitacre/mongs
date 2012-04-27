@@ -190,6 +190,12 @@ if document is not None: # XXX Can document ever be None?
 ^L
 {% extends "base.html" %}
 {% block content %}
+<style>
+    .note EM {
+        font-style: normal;
+        background: #FFFE98;
+    }
+</style>
 <table>
     <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
     <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>

@@ -180,8 +180,10 @@ nrows = len(rows)
     {% for i, row in enumerate(rows) %}
     <tr class="big collection listing{% if row.is_index %} index{% end %}">
         {% if i == 0 %}<th rowspan="{{ nrows }}">
-            <span>Collections</span>
-            <!--span class="note">and indices</span-->
+            <span>
+                Collections
+                <span class="note">including indices</span>
+            </span>
         </th>{% end %}
 
         <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</a>{% end %}</td>
