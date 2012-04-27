@@ -7,6 +7,23 @@ import pymongo
 from pymongo.objectid import ObjectId, InvalidId
 
 
+def commaize(n, places=1):
+    """Given a number, return a string with commas and a decimal -- 1,000.0.
+    """
+    out = ("%%.0%df" % places) % n
+    try:
+        whole, fraction = out.split('.')
+    except ValueError:
+        whole, fraction = (out, '')
+    _whole = []
+    for i, digit in enumerate(reversed(whole), start=1):
+        _whole.insert(0, digit)
+        if i % 3 == 0:
+            _whole.insert(0, ',')
+    out = ''.join(_whole + ['.', fraction]).lstrip(',').rstrip('.')
+    return out
+
+
 def get_value(request):
     """Given a request object, return a value. Use for *.txt and *.json.
     """
@@ -25,6 +42,7 @@ def get_value(request):
     document = db.find_one(_id)
     return document[key]
 
+
 def total_seconds(td):
     """
     Python 2.7 adds a total_seconds method to timedelta objects.
@@ -38,6 +56,7 @@ def total_seconds(td):
     except AttributeError:
         result = (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
     return result
+
 
 def dt2age(dt):
     """Given a Unix timestamp (UTC) or a datetime object, return an age string

@@ -1,3 +1,5 @@
+"""/server/database/collection/
+"""
 import pymongo
 from aspen import Response
 
@@ -8,26 +10,53 @@ collection = request.path['collection']
 
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 
-documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
+if collection == 'system.namespaces':
+
+    # Special case. This collection holds the names of all other collections in
+    # this database. Users can access it directly for any database. For
+    # databases with more than a few collections we enforce that users browse
+    # collections using this interface rather than calling collection_names.
+
+    documents = coll.find()
+    if documents.count() < 10:
+        documents.sort('name', pymongo.ASCENDING)
+else:
+    # This is a query for a "normal" collection.
+    documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
+
 try:
     document = documents.next()
 except StopIteration:
     pass
 else:
-    # Aspen as of 0.10.8 chokes on empty path parts, so we have to indicate 
-    # an empty filter with explicit braces.
-    raise Response(302, headers={'Location': './{}/1/'})
 
+    # Redirect users to the first document in this collection.
+    # ========================================================
+    # Aspen as of 0.10.8 chokes on empty path parts, so we have to indicate
+    # an empty filter with explicit braces.
+
+    raise Response(302, headers={'Location': './{}/1/'})
 
 ^L
 {% extends "base.html" %}
 {% block content %}
 <table>
-    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
-    <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
-    <tr class="big collection"><th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th><td>{{ collection }}</td></tr>
+    <tr class="big server">
+        <th><a href="/" title="Click for All Servers">Server</a></th>
+        <td>{{ server }}</td>
+    </tr>
+    <tr class="big database">
+        <th><a href="/{{ server }}/" 
+                title="Click for All Databases">Database</a></th>
+        <td>{{ database }}</td>
+    </tr>
+    <tr class="big collection">
+        <th><a href="/{{ server }}/{{ database }}/" 
+                title="Click for All Collections">Collection</a></th>
+        <td>{{ collection }}</td>
+    </tr>
     <tr class="big document">
-        <th><span>Document</span></th>
+        <th><span>Documents</span></th>
         <td>No documents found.</td>
     </tr>
 </table>

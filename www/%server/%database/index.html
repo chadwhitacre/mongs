@@ -1,6 +1,10 @@
+"""/server/database/
+"""
 import math
 
 import pymongo
+from aspen import Response
+from mongs import commaize
 
 
 MB = 1024 ** 2.0
@@ -12,17 +16,7 @@ def f2s(n, scale=1.0):
     if n == 0.0:
         out = "0&nbsp;&nbsp;"
     else:
-        out = "%.01f" % (n / scale)
-
-        # add commas -- 1,000.00
-        whole, fraction = out.split('.')
-        _whole = []
-        for i, digit in enumerate(reversed(whole), start=1):
-            _whole.insert(0, digit)
-            if i % 3 == 0:
-                _whole.insert(0, ',')
-        out = ''.join(_whole + ['.', fraction]).lstrip(',')
-
+        out = commaize(n / scale)
     return out
 
 
@@ -79,7 +73,9 @@ class Index(Collection):
     """
     is_index = True
 
-# ========================================================================== ^L
+# ==========================================================================
+# dodge weird 2.6 issue 
+^L
 
 
 # parse and hydrate
@@ -88,6 +84,17 @@ class Index(Collection):
 server = request.path['server']
 database = request.path['database']
 db = pymongo.Connection(server, slave_okay=True)[database]
+
+
+# optimize
+# ========
+# The collection_names API call is unsuitable for databases with many
+# collections. In such cases we require the user to browse the collections via
+# the system.namespaces meta-collection.
+
+if db['system.namespaces'].count() > 256:
+    raise Response(302, headers=[('Location', './system.namespaces/')])
+
 
 
 # dbsize
@@ -120,7 +127,7 @@ dbsize = 0.0
 # take pains to sort by storage_size, with indices grouped by collection.
 
 rows = []
-collnames = db.collection_names() # XXX might be expensive
+collnames = db.collection_names() + ['system.namespaces']
 
 # first build a list of collections, sorted by storage_size ascending
 for collname in collnames:
@@ -142,7 +149,9 @@ while rows:
 rows = _rows
 
 
-# ========================================================================== ^L
+# ==========================================================================
+# dodge weird 2.6 issue 
+^L
 {% extends "base.html" %}
 {% block content %}
 <style>

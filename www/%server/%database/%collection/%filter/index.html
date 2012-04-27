@@ -19,6 +19,9 @@ class Pair:
     """Represent a single key/value pair from a document.
     """
 
+    is_filtered = False
+    is_indexed = False
+
     def __init__(self, base, _id, k, v):
         if isinstance(v, unicode):
             # lists and dictionaries work for some reason
@@ -43,9 +46,32 @@ class Pair:
 
         self.k = k
         self.v = v
-        self.monospaced = False
         self.link = link
-        self.is_indexed = False
+
+
+def NamespacePair(database):
+    # Have I ever done this before? I don't think I have.
+
+    class NamespacePair(Pair):
+        """Represent the single pair of values for a system.namespaces entry.
+        """
+        def __init__(self, base, _id, k, v):
+            parts = v.split('.$')
+            if len(parts) == 1:
+                parts += ['']
+            namepart, indexpart = parts
+            if indexpart:
+                indexpart = ".$" + indexpart
+            collection = namepart[len(database)+1:]
+            value = '%s.<a href="../../../%s/">%s</a>%s' 
+            value %= (database, collection, collection, indexpart)
+
+            self.k = k
+            self.v = value
+            self.link = False
+
+    return NamespacePair
+
 
 ^L
 
@@ -59,6 +85,14 @@ filter = request.path['filter']
 page = request.path.get('page', None)
 single = page is None
 filtered = single
+
+
+# Pair class.
+# ===========
+# If we are on system.namespaces we want to link to collections.
+
+if collection == 'system.namespaces':
+    Pair = NamespacePair(database)  # will insert hyperlinks to the collection
 
 
 # Compute base, filter, and page.
@@ -89,7 +123,17 @@ if not single:      # /server/database/collection/filter/page/
         # If there is no filter, we can safely compute the count from the 
         # unfiltered collection, which appears to be O(1) instead of O(N).
         optimize_count = True
-else:               # /server/database/collection/_id/
+
+elif collection == 'system.namespaces':
+                    # /server/database/system.namespaces/collection/ 
+
+    # Special case for system.namespaces. The _id is actually the
+    # fully-qualified name of a collection or index. Send them to the
+    # collection!
+    collection = filter.split('$')[0][len(database)+1:]
+    raise Response(301, headers=[('Location', '../../%s/' % collection)])
+
+else:               # /server/database/collection/_id/ 
     # Convert a request for a specific _id into a filter with one page.
     page = 1
     base = '..'
@@ -100,9 +144,13 @@ else:               # /server/database/collection/_id/
         pass
     filter = {"_id": _id}
 
-if '_id' not in filter:
-    # I'm sorry, I forget why I did this. :^(
-    filter.update({'_id': {'$exists': True}})
+if collection == 'system.namespaces':
+    # special case for MongoDB's collection of collections; docs have no _id
+    pass
+else:
+    if '_id' not in filter:
+        # I'm sorry, I forget why I did this. :^(
+        filter.update({'_id': {'$exists': True}})
 
 
 # Sort.
@@ -113,6 +161,9 @@ if '_id' not in filter:
 
 if 'sort' in filter:
     sort = filter.pop('sort')
+elif collection == 'system.namespaces':
+    # special case; this has no _id, only name
+    sort = [("name", 1)]
 else:
     sort = [("_id", 1)]
 
@@ -127,7 +178,26 @@ ndocs = coll.count() if optimize_count else documents.count()
 if (page < 1) or (page > ndocs):
     raise Response(404)
 documents.rewind()
-documents.sort(sort)
+
+
+# Sort.
+# =====
+
+if collection == 'system.namespaces' and ndocs > 1024:
+
+    # Special case. It is possible to index system.namespaces, but no one is
+    # really going to have done that. Only sort if there's a small number of
+    # collections.
+    #
+    # The next step would be to check for the presence of an index. I think
+    # MongoDB actually does this internally (refuses to sort if the result set
+    # is too large and there's no index), but I think it still degrades
+    # performance.
+
+    pass
+
+else:
+    documents.sort(sort)
 
 
 # Compute prev/next.
@@ -168,8 +238,8 @@ if document is not None: # XXX Can document ever be None?
         """
         for k,v in sorted(document.iteritems()):
             pair = Pair(base, _id, k, v)
-            pair.is_indexed = pair.k in indexed
             pair.is_filtered = False
+            pair.is_indexed = pair.k in indexed
             pair.sort = ''
             if pair.k != '_id':
                 pair.is_filtered = pair.k in filter
@@ -197,17 +267,29 @@ if document is not None: # XXX Can document ever be None?
     }
 </style>
 <table>
-    <tr class="big server"><th><a href="/" title="Click for All Servers">Server</a></th><td>{{ server }}</td></tr>
-    <tr class="big database"><th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th><td>{{ database }}</td></tr>
-    <tr class="big collection"><th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th><td>{{ collection }}</td></tr>
+    <tr class="big server">
+        <th><a href="/" title="Click for All Servers">Server</a></th>
+        <td>{{ server }}</td>
+    </tr>
+    <tr class="big database">
+        <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
+        <td>{{ database }}</td>
+    </tr>
+    <tr class="big collection">
+        <th><a href="/{{ server }}/{{ database }}/" title="Click for All Collections">Collection</a></th>
+        <td>{{ collection }}</td>
+    </tr>
     <tr class="big document">
-        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" title="Click for All Documents">Document</a>{% else %}<span>Document{% end %} <span class="note">highlight = <em>indexed</em></span></th>
+        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" 
+                    title="Click for All Documents">Document</a>{% else %}<span>Document{% end %} 
+            <span class="note">highlight = <em>indexed</em></span>
+        </th>
         <td>
             {% if single %}
             <a href="./">{{ _id }}</a>
             {% else %}
             {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% end %} |
-            {{ page }} of {{ ndocs }}
+            {{ page }} of {{ mongs.commaize(ndocs, places=0) }}
             | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% end %}
             {% end %}
         </td>
