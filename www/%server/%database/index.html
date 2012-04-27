@@ -33,7 +33,6 @@ class Collection(object):
     is_index = False
 
     def __init__(self, db, collname):
-        self.dbsize = 0
         self.name = collname
         self.stats = stats = db.command({'collStats': collname})
         self.storage_size = float(stats['storageSize'])
@@ -117,18 +116,31 @@ dbsize = 0.0
 # rows
 # ====
 # We have to build this as a list rather than using a generator because we need
-# to fully compute dbsize before formatting any given row for display.
+# to fully compute dbsize before formatting any given row for display. We also 
+# take pains to sort by storage_size of the collection, while grouping indices
+# under their collection.
 
 rows = []
-for collname in sorted(db.collection_names(), key=lambda n: n.lower()):
+collnames = db.collection_names() # XXX might be expensive
+
+# first build a list of collections, sorted by storage_size ascending
+for collname in collnames:
     collection = Collection(db, collname)
     rows.append(collection)
     dbsize += collection.storage_size
+rows.sort(key=lambda row: row.storage_size)
+
+# now add in indices, reversing in the process
+_rows = []
+while rows:
+    collection = rows.pop()  # this has the effect of reversing rows
+    _rows.append(collection)
     for indexname in collection.indices:
         index = Index(db, indexname)
-        rows.append(index)
+        _rows.append(index)
         dbsize += index.storage_size
-nrows = len(rows)
+rows = _rows
+
 
 # ========================================================================== ^L
 {% extends "base.html" %}
@@ -187,7 +199,7 @@ nrows = len(rows)
     </tr>
     {% for i, row in enumerate(rows) %}
     <tr class="big collection listing{% if row.is_index %} index{% end %}">
-        {% if i == 0 %}<th rowspan="{{ nrows }}">
+        {% if i == 0 %}<th rowspan="{{ len(rows) }}">
             <span>
                 Collections
                 <span class="note">
