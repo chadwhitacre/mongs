@@ -4,7 +4,6 @@ import pymongo
 
 
 MB = 1024 ** 2.0
-PIXELS = 100
 
 
 def f2s(n, scale=1.0):
@@ -17,18 +16,29 @@ def f2s(n, scale=1.0):
     return out
 
 
-class CollectionRow(object):
+class Collection(object):
+    """Model a MongoDB collection.
+    """
 
-    def __init__(self, db, dbsize, collname):
-        self.dbsize = dbsize
+    is_index = False
+
+    def __init__(self, db, collname):
+        self.dbsize = 0
         self.name = collname
-        self.stats = stats = db.command({'collstats': collname})
-        self.size = stats['storageSize']
+        self.stats = stats = db.command({'collStats': collname})
+        self.size = float(stats['storageSize'])
 
-    def format_size(self):
-        total = f2s(self.dbsize, MB).replace("&nbsp;", "N")
+        # I adapted this from the definition of db.foo.totalSize per the mongo
+        # js shell. I gather from there that indexes are just specially-named
+        # collections, and the same storageSize/dataSize semantics apply. I
+        # believe that the indexSizes attribute of collStats gives us dataSize.
+        index_names = stats['indexSizes'].keys()
+        self.indices = ["%s.$%s" % (collname, name) for name in index_names]
 
-        percent = f2s(self.size / self.dbsize * 100)
+    def format_size(self, dbsize):
+        total = f2s(dbsize, MB).replace("&nbsp;", "N")
+
+        percent = f2s(self.size / dbsize * 100)
         percent = ((5 - len(percent)) * "&nbsp;") + percent
         left = percent
 
@@ -42,26 +52,77 @@ class CollectionRow(object):
         return left + right
 
     def format_utilization(self):
-        out = f2s(self.stats['size'] / self.dbsize * 100)
-        out.replace("&nbsp;", "N")
-        out = ("&nbsp;" * (len(out) - 5)) + out
-        out.replace("N", "&nbsp;")
+        """Return a string indicating utilization
+        """
+        out = f2s(self.stats['size'] / self.size * 100)
+        out = out.replace("&nbsp;", "N")
+        print out, len(out)
+        out = ("&nbsp;" * (5 - len(out))) + out
+        out = out.replace("N", "&nbsp;")
         return out
 
 
-^L
+class Index(Collection):
+    """MongoDB indices are special collections.
 
+    The storageSize and dataSize semantics appear to be the same, so all of the
+    logic of the base class applies. We just want to format them differently in
+    the UI.
+
+    """
+    is_index = True
+
+# ========================================================================== ^L
+
+
+# parse and hydrate
+# =================
 
 server = request.path['server']
 database = request.path['database']
-
 db = pymongo.Connection(server, slave_okay=True)[database]
-dbsize = float(100) # db.command({'dbstats': 1})['storageSize'])
-collnames = sorted(db.collection_names())
-collections = [CollectionRow(db, dbsize, collname) for collname in collnames]
-ncollections = len(collections)
 
-^L
+
+# dbsize
+# ======
+# We need the disk size of the database as a whole in order to calculate
+# percentages. However, the dbstats call blocks the whole db server while it
+# runs, and it takes a long time (we killed it after 15 minutes in the case
+# where this problem came to light. Oops!). See:
+#
+#   http://www.mongodb.org/display/DOCS/Monitoring+and+Diagnostics#MonitoringandDiagnostics-mongoShellDiagnosticCommands
+#
+# Now instead we sum storageSize from collstats, which is a safe call (per
+# jaraco). Apparently there are three size metrics, however, and I'm not sure
+# that summing collstats.storageSize is guaranteed to equal dbstats.fileSize
+# (which is what I want). Here's me trying to figure out what to do:
+#
+#   http://stackoverflow.com/questions/10339852/
+#
+# The bottom line for now is that I'm showing storageSize and dataSize and 
+# pretending not to care about fileSize (though of course that's the very thing
+# I care about!).
+
+dbsize = 0.0
+
+
+# rows
+# ====
+# We have to build this as a list rather than using a generator because we need
+# to fully compute dbsize before formatting any given row for display.
+
+rows = []
+for collname in sorted(db.collection_names(), key=lambda n: n.lower()):
+    collection = Collection(db, collname)
+    rows.append(collection)
+    dbsize += collection.size
+    for indexname in collection.indices:
+        index = Index(db, indexname)
+        rows.append(index)
+        dbsize += index.size
+nrows = len(rows)
+
+# ========================================================================== ^L
 {% extends "base.html" %}
 {% block content %}
 <style>
@@ -83,7 +144,6 @@ ncollections = len(collections)
         text-align: right;
         white-space: nowrap;
         font-weight: normal ! important;
-        color: #CCC;
     }
     TR.server TD.size, 
     TR.server TD.utilization, 
@@ -98,13 +158,16 @@ ncollections = len(collections)
     TD.empty {
         width: 100%;
     }
+    .index {
+        color: #CCC;
+    }
 </style>
 <table>
     <tr class="big server">
         <th><a href="/" title="Click for All Servers">Server</a></th>
         <td>{{ server }}</td>
-        <td class="size">Size on Disk</td>
-        <td class="utilization">Utilization</td>
+        <td class="size">storageSize</td>
+        <td class="utilization">dataSize</td>
         <td class="empty"></td>
     </tr>
     <tr class="big database">
@@ -114,12 +177,16 @@ ncollections = len(collections)
         <td class="utilization">%</td>
         <td class="empty"></td>
     </tr>
-    {% for i, collection in enumerate(collections) %}
-    <tr class="big collection listing">
-        {% if i == 0 %}<th rowspan="{{ ncollections }}"><span>Collections</span></th>{% end %}
-        <td class="name{% if i > 0 %} notfirst{% end %}"><a href="/{{ server }}/{{ database }}/{{ collection.name }}/">{{ collection.name }}</a></td>
-        <td class="size{% if i > 0 %} notfirst{% end %}">{{ collection.format_size() }}</td>
-        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ collection.format_utilization() }}</td>
+    {% for i, row in enumerate(rows) %}
+    <tr class="big collection listing{% if row.is_index %} index{% end %}">
+        {% if i == 0 %}<th rowspan="{{ nrows }}">
+            <span>Collections</span>
+            <!--span class="note">and indices</span-->
+        </th>{% end %}
+
+        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</a>{% end %}</td>
+        <td class="size{% if i > 0 %} notfirst{% end %}">{{ row.format_size(dbsize) }}</td>
+        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ row.format_utilization() }}</td>
         <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
     </tr>
     {% end %}
