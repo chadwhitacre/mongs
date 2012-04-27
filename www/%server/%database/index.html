@@ -135,7 +135,7 @@ nrows = len(rows)
     TR.collection TD.name {
         width: 1px;
     }
-    TD.size, TD.utilization {
+    TD.storage_size, TD.data_size {
         width: 1px;
         padding-right: 1em ! important;
         padding-left: 10px;
@@ -144,14 +144,14 @@ nrows = len(rows)
         white-space: nowrap;
         font-weight: normal ! important;
     }
-    TR.server TD.size, 
-    TR.server TD.utilization, 
-    TR.database TD.utilization {
+    TR.server TD.storage_size, 
+    TR.server TD.data_size, 
+    TR.database TD.data_size {
         padding-left: 0 ! important;
         padding-right: 0 ! important;
         text-align: center;
     }
-    TR.collection TD.utilization {
+    TR.collection TD.data_size {
         text-align: center;
     }
     TD.empty {
@@ -165,15 +165,15 @@ nrows = len(rows)
     <tr class="big server">
         <th><a href="/" title="Click for All Servers">Server</a></th>
         <td>{{ server }}</td>
-        <td class="size">storageSize</td>
-        <td class="utilization">dataSize</td>
+        <td class="storage_size">storageSize</td>
+        <td class="data_size">dataSize</td>
         <td class="empty"></td>
     </tr>
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
         <td>{{ database }}</td>
-        <td class="size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;</td>
-        <td class="utilization">%</td>
+        <td class="storage_size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;</td>
+        <td class="data_size">%</td>
         <td class="empty"></td>
     </tr>
     {% for i, row in enumerate(rows) %}
@@ -185,9 +185,11 @@ nrows = len(rows)
             </span>
         </th>{% end %}
 
-        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</a>{% end %}</td>
-        <td class="size{% if i > 0 %} notfirst{% end %}">{{ row.format_storage_size(dbsize) }}</td>
-        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ row.format_data_size(dbsize) }}</td>
+        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a 
+            href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</
+            a>{% end %}</td>
+        <td class="storage_size{% if i > 0 %} notfirst{% end %}">{{ row.format_storage_size(dbsize) }}</td>
+        <td class="data_size{% if i > 0 %} notfirst{% end %}">{{ row.format_data_size(dbsize) }}</td>
         <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
     </tr>
     {% end %}
