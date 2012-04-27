@@ -46,10 +46,10 @@ class Collection(object):
         absolute = absolute.replace("&nbsp;", "N")
         absolute = ("&nbsp;" * (len(total) - len(absolute))) + absolute
         absolute = absolute.replace("N", "&nbsp;")
-        absolute = "%s&nbsp;&nbsp;&nbsp;" % absolute
+        absolute = "%s&nbsp;&nbsp;" % absolute
 
         percent = f2s(self.storage_size / dbsize * 100)
-        percent = ((7 - len(percent)) * "&nbsp;") + percent
+        percent = ((6 - len(percent)) * "&nbsp;") + percent
 
         return absolute + percent
 
@@ -58,7 +58,7 @@ class Collection(object):
         """
         out = f2s(self.data_size / dbsize * 100)
         out = out.replace("&nbsp;", "N")
-        out = ("&nbsp;" * (5 - len(out))) + out
+        out = ("&nbsp;" * (4 - len(out))) + out
         out = out.replace("N", "&nbsp;")
         return out
 
@@ -159,31 +159,35 @@ rows = _rows
 <style>
     TR.collection TD.notfirst {
         border-top: none ! important;
-        padding: 0 1em 0 10px ! important;
+        padding: 0 ! important;
     }
     TR.collection TD {
         padding-bottom: 0 ! important;
     }
     TR.collection TD.name {
         width: 1px;
+        padding-left: 10px ! important;
+        padding-right: 1em ! important;
+    }
+    TR.server TD.storage_size,
+    TR.database TD.storage_size,
+    TR.server TD.data_size,
+    TR.database TD.data_size {
+        text-align: center;
+    }
+    TD.storage_size {
+        padding-left: 0;
     }
     TD.storage_size, TD.data_size {
         width: 1px;
-        padding-right: 1em ! important;
-        padding-left: 10px;
         font: normal 10pt/12pt "Lucida Mono", Monaco, monospace;
         text-align: right;
         white-space: nowrap;
         font-weight: normal ! important;
     }
-    TR.server TD.storage_size, 
-    TR.server TD.data_size, 
-    TR.database TD.data_size {
-        padding-left: 0 ! important;
-        padding-right: 0 ! important;
-        text-align: center;
-    }
-    TR.collection TD.data_size {
+    TD.data_size {
+        padding-left: 3em ! important;
+        padding-right: 3em ! important;
         text-align: center;
     }
     TD.empty {
@@ -204,7 +208,7 @@ rows = _rows
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
         <td>{{ database }}</td>
-        <td class="storage_size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;</td>
+        <td class="storage_size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;%&nbsp;&nbsp;</td>
         <td class="data_size">%</td>
         <td class="empty"></td>
     </tr>
