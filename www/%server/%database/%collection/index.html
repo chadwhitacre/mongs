@@ -18,7 +18,7 @@ if collection == 'system.namespaces':
     # collections using this interface rather than calling collection_names.
 
     documents = coll.find()
-    if documents.count() < 10:
+    if documents.count() < 1024:  # assume that system.namespaces isn't indexed
         documents.sort('name', pymongo.ASCENDING)
 else:
     # This is a query for a "normal" collection.
