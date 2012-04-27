@@ -13,6 +13,16 @@ def f2s(n, scale=1.0):
         out = "0&nbsp;&nbsp;"
     else:
         out = "%.01f" % (n / scale)
+
+        # add commas -- 1,000.00
+        whole, fraction = out.split('.')
+        _whole = []
+        for i, digit in enumerate(reversed(whole), start=1):
+            _whole.insert(0, digit)
+            if i % 3 == 0:
+                _whole.insert(0, ',')
+        out = ''.join(_whole + ['.', fraction]).lstrip(',')
+
     return out
 
 
