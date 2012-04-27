@@ -96,7 +96,6 @@ if db['system.namespaces'].count() > 256:
     raise Response(302, headers=[('Location', './system.namespaces/')])
 
 
-
 # dbsize
 # ======
 # We need the disk size of the database as a whole in order to calculate
@@ -116,6 +115,9 @@ if db['system.namespaces'].count() > 256:
 # The bottom line for now is that I'm showing storageSize and dataSize and 
 # pretending not to care about fileSize (though of course that's the very thing
 # I care about!).
+#
+# Update: I've filed an issue with 10gen to see about safely exposing fileSize
+# per-db and per-collection in a future release.
 
 dbsize = 0.0
 
@@ -135,7 +137,7 @@ for collname in collnames:
     dbsize += rows[-1].storage_size
 rows.sort(key=lambda row: row.storage_size)
 
-# now add in indices, reversing in the process
+# now add in indices, reversing in the process (we want biggest first)
 _rows = []
 while rows:
     collection = rows.pop()  # this has the effect of reversing rows
