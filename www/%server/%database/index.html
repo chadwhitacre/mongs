@@ -117,17 +117,15 @@ dbsize = 0.0
 # ====
 # We have to build this as a list rather than using a generator because we need
 # to fully compute dbsize before formatting any given row for display. We also 
-# take pains to sort by storage_size of the collection, while grouping indices
-# under their collection.
+# take pains to sort by storage_size, with indices grouped by collection.
 
 rows = []
 collnames = db.collection_names() # XXX might be expensive
 
 # first build a list of collections, sorted by storage_size ascending
 for collname in collnames:
-    collection = Collection(db, collname)
-    rows.append(collection)
-    dbsize += collection.storage_size
+    rows.append(Collection(db, collname))
+    dbsize += rows[-1].storage_size
 rows.sort(key=lambda row: row.storage_size)
 
 # now add in indices, reversing in the process
@@ -135,10 +133,12 @@ _rows = []
 while rows:
     collection = rows.pop()  # this has the effect of reversing rows
     _rows.append(collection)
+    indices = []
     for indexname in collection.indices:
-        index = Index(db, indexname)
-        _rows.append(index)
-        dbsize += index.storage_size
+        indices.append(Index(db, indexname))
+        dbsize += indices[-1].storage_size
+    indices.sort(key=lambda index: index.storage_size, reverse=True)
+    _rows.extend(indices)
 rows = _rows
 
 
