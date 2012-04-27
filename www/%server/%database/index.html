@@ -26,7 +26,8 @@ class Collection(object):
         self.dbsize = 0
         self.name = collname
         self.stats = stats = db.command({'collStats': collname})
-        self.size = float(stats['storageSize'])
+        self.storage_size = float(stats['storageSize'])
+        self.data_size = float(stats['size'])
 
         # I adapted this from the definition of db.foo.totalSize per the mongo
         # js shell. I gather from there that indexes are just specially-named
@@ -35,26 +36,24 @@ class Collection(object):
         index_names = stats['indexSizes'].keys()
         self.indices = ["%s.$%s" % (collname, name) for name in index_names]
 
-    def format_size(self, dbsize):
+    def format_storage_size(self, dbsize):
         total = f2s(dbsize, MB).replace("&nbsp;", "N")
 
-        percent = f2s(self.size / dbsize * 100)
-        percent = ((5 - len(percent)) * "&nbsp;") + percent
-        left = percent
-
-        absolute = f2s(self.size, MB)
+        absolute = f2s(self.storage_size, MB)
         absolute = absolute.replace("&nbsp;", "N")
         absolute = ("&nbsp;" * (len(total) - len(absolute))) + absolute
         absolute = absolute.replace("N", "&nbsp;")
-        absolute = " %s&nbsp;&nbsp;&nbsp;" % absolute
-        right = absolute
+        absolute = "%s&nbsp;&nbsp;&nbsp;" % absolute
 
-        return left + right
+        percent = f2s(self.storage_size / dbsize * 100)
+        percent = ((7 - len(percent)) * "&nbsp;") + percent
 
-    def format_utilization(self):
-        """Return a string indicating utilization
+        return absolute + percent
+
+    def format_data_size(self, dbsize):
+        """Return a string indicating dataSize.
         """
-        out = f2s(self.stats['size'] / self.size * 100)
+        out = f2s(self.data_size / dbsize * 100)
         out = out.replace("&nbsp;", "N")
         print out, len(out)
         out = ("&nbsp;" * (5 - len(out))) + out
@@ -115,11 +114,11 @@ rows = []
 for collname in sorted(db.collection_names(), key=lambda n: n.lower()):
     collection = Collection(db, collname)
     rows.append(collection)
-    dbsize += collection.size
+    dbsize += collection.storage_size
     for indexname in collection.indices:
         index = Index(db, indexname)
         rows.append(index)
-        dbsize += index.size
+        dbsize += index.storage_size
 nrows = len(rows)
 
 # ========================================================================== ^L
@@ -173,7 +172,7 @@ nrows = len(rows)
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
         <td>{{ database }}</td>
-        <td class="size">&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;&nbsp;{{ f2s(dbsize, MB) }} MB</td>
+        <td class="size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;&nbsp;&nbsp;%&nbsp;&nbsp;</td>
         <td class="utilization">%</td>
         <td class="empty"></td>
     </tr>
@@ -187,8 +186,8 @@ nrows = len(rows)
         </th>{% end %}
 
         <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</a>{% end %}</td>
-        <td class="size{% if i > 0 %} notfirst{% end %}">{{ row.format_size(dbsize) }}</td>
-        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ row.format_utilization() }}</td>
+        <td class="size{% if i > 0 %} notfirst{% end %}">{{ row.format_storage_size(dbsize) }}</td>
+        <td class="utilization{% if i > 0 %} notfirst{% end %}">{{ row.format_data_size(dbsize) }}</td>
         <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
     </tr>
     {% end %}
