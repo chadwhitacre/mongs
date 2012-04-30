@@ -129,7 +129,9 @@ dbsize = 0.0
 # take pains to sort by storage_size, with indices grouped by collection.
 
 rows = []
-collnames = db.collection_names() + ['system.namespaces']
+collnames = db.collection_names()
+if collnames:
+    collnames += ['system.namespaces']
 
 # first build a list of collections, sorted by storage_size ascending
 for collname in collnames:
@@ -159,12 +161,12 @@ rows = _rows
 <style>
     TR.collection TD.notfirst {
         border-top: none ! important;
-        padding: 0 ! important;
+        padding-top: 0 ! important;
     }
     TR.collection TD {
         padding-bottom: 0 ! important;
     }
-    TR.collection TD.name {
+    TD.name {
         width: 1px;
         padding-left: 10px ! important;
         padding-right: 1em ! important;
@@ -200,18 +202,28 @@ rows = _rows
 <table>
     <tr class="big server">
         <th><a href="/" title="Click for All Servers">Server</a></th>
-        <td>{{ server }}</td>
+        <td class="name">{{ server }}</td>
+        {% if rows %}
         <td class="storage_size">storageSize</td>
         <td class="data_size">dataSize</td>
         <td class="empty"></td>
+        {% end %}
     </tr>
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
-        <td>{{ database }}</td>
+        <td class="name">{{ database }}</td>
+        {% if rows %}
         <td class="storage_size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;%&nbsp;&nbsp;</td>
         <td class="data_size">%</td>
         <td class="empty"></td>
+        {% end %}
     </tr>
+    {% if not rows %}
+    <tr class="big collection listing">
+        <th><span>Collections</span></th>
+        <td style="color: #999;">No collections found.</td>
+    </tr>
+    {% end %}
     {% for i, row in enumerate(rows) %}
     <tr class="big collection listing{% if row.is_index %} index{% end %}">
         {% if i == 0 %}<th rowspan="{{ len(rows) }}">
