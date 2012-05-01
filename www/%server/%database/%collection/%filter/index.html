@@ -23,6 +23,7 @@ class Pair:
     is_indexed = False
 
     def __init__(self, base, _id, k, v):
+        escape = True
         if isinstance(v, unicode):
             # lists and dictionaries work for some reason
             v = v.encode('ASCII', 'replace')
@@ -30,6 +31,9 @@ class Pair:
             v = '%s (%s)' % (v, v.generation_time)
         if isinstance(v, datetime.datetime):
             v = "%s (%s)" % (v.isoformat(), mongs.dt2age(v))
+        if isinstance(v, (int, float)):
+            v = "<code>%s</code>" % v
+            escape = False
         nv = len(str(v))
         link = ''
         if k == '_id':
@@ -40,7 +44,8 @@ class Pair:
         else:
             if not isinstance(v, basestring):
                 v = pprint.pformat(v, indent=1)
-            v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            if escape:
+                v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
             if '\n' in v:
                 v = "<pre>%s</pre>" % v
 
