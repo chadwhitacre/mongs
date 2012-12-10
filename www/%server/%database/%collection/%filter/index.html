@@ -116,7 +116,7 @@ optimize_count = False # If we can, compute the count without filtering.
 if not single:      # /server/database/collection/filter/page/
     # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
-    filter = urllib.unquote_plus(filter).strip()
+    filter = urllib.unquote(filter).strip()
     if filter:
         filtered = True
         if not filter.startswith('{'):
