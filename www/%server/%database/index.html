@@ -74,7 +74,7 @@ class Index(Collection):
     is_index = True
 
 # ==========================================================================
-# dodge weird 2.6 issue 
+# dodge weird 2.6 issue
 ^L
 
 
@@ -112,7 +112,7 @@ if db['system.namespaces'].count() > 256:
 #
 #   http://stackoverflow.com/questions/10339852/
 #
-# The bottom line for now is that I'm showing storageSize and dataSize and 
+# The bottom line for now is that I'm showing storageSize and dataSize and
 # pretending not to care about fileSize (though of course that's the very thing
 # I care about!).
 #
@@ -125,7 +125,7 @@ dbsize = 0.0
 # rows
 # ====
 # We have to build this as a list rather than using a generator because we need
-# to fully compute dbsize before formatting any given row for display. We also 
+# to fully compute dbsize before formatting any given row for display. We also
 # take pains to sort by storage_size, with indices grouped by collection.
 
 rows = []
@@ -154,7 +154,7 @@ rows = _rows
 
 
 # ==========================================================================
-# dodge weird 2.6 issue 
+# dodge weird 2.6 issue
 ^L
 {% extends "base.html" %}
 {% block content %}
@@ -238,7 +238,7 @@ rows = _rows
             </span>
         </th>{% end %}
 
-        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a 
+        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a
             href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</
             a>{% end %}</td>
         <td class="storage_size{% if i > 0 %} notfirst{% end %}">{{ row.format_storage_size(dbsize) }}</td>

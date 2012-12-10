@@ -68,7 +68,7 @@ def NamespacePair(database):
             if indexpart:
                 indexpart = ".$" + indexpart
             collection = namepart[len(database)+1:]
-            value = '%s.<a href="../../../%s/">%s</a>%s' 
+            value = '%s.<a href="../../../%s/">%s</a>%s'
             value %= (database, collection, collection, indexpart)
 
             self.k = k
@@ -125,12 +125,12 @@ if not single:      # /server/database/collection/filter/page/
     else:
         filter = {}
     if not filter:
-        # If there is no filter, we can safely compute the count from the 
+        # If there is no filter, we can safely compute the count from the
         # unfiltered collection, which appears to be O(1) instead of O(N).
         optimize_count = True
 
 elif collection == 'system.namespaces':
-                    # /server/database/system.namespaces/collection/ 
+                    # /server/database/system.namespaces/collection/
 
     # Special case for system.namespaces. The _id is actually the
     # fully-qualified name of a collection or index. Send them to the
@@ -138,7 +138,7 @@ elif collection == 'system.namespaces':
     collection = filter.split('$')[0][len(database)+1:]
     raise Response(301, headers=[('Location', '../../%s/' % collection)])
 
-else:               # /server/database/collection/_id/ 
+else:               # /server/database/collection/_id/
     # Convert a request for a specific _id into a filter with one page.
     page = 1
     base = '..'
@@ -285,8 +285,8 @@ if document is not None: # XXX Can document ever be None?
         <td>{{ collection }}</td>
     </tr>
     <tr class="big document">
-        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/" 
-                    title="Click for All Documents">Document</a>{% else %}<span>Document{% end %} 
+        <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/"
+                    title="Click for All Documents">Document</a>{% else %}<span>Document{% end %}
             <span class="note">highlight = <em>indexed</em></span>
         </th>
         <td>
