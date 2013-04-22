@@ -1,5 +1,5 @@
 import mongs
-^L
+[----]
 value = mongs.get_value(request)
 if isinstance(value, basestring):
     # Smartly send the user to a text/plain representation, so their in-browser

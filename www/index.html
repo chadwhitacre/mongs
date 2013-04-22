@@ -1,9 +1,9 @@
-^L
-servers = website.conf.mongs.get('servers', 'localhost')
+[----]
+servers = 'localhost'
 servers = [server.strip(',') for server in servers.split()]
 servers = [server for server in servers if server]
 servers.sort()
-^L
+[----]
 {% extends "base.html" %}
 {% block content %}
 <table>

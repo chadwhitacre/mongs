@@ -11,7 +11,7 @@ import urllib
 import mongs
 import pymongo
 from aspen import json, Response
-from pymongo.objectid import ObjectId, InvalidId
+from bson.objectid import ObjectId, InvalidId
 
 SIZE_THRESHOLD = 2048 # number of bytes above which we link out
 
@@ -78,16 +78,16 @@ def NamespacePair(database):
     return NamespacePair
 
 
-^L
+[----]
 
 # Parse input
 # ===========
 
-server = request.path['server']
-database = request.path['database']
-collection = request.path['collection']
-filter = request.path['filter']
-page = request.path.get('page', None)
+server = path['server']
+database = path['database']
+collection = path['collection']
+filter = path['filter']
+page = path.get('page', None)
 single = page is None
 filtered = single
 
@@ -262,7 +262,7 @@ if document is not None: # XXX Can document ever be None?
 #============================================================================
 # For some reason under Python2.6 but not 2.7 if the caret-L is on the same
 # line as the commented ====== then we get a SyntaxError. Curious!
-^L
+[----]
 {% extends "base.html" %}
 {% block content %}
 <style>

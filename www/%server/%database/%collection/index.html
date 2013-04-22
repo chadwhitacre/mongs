@@ -3,10 +3,10 @@
 import pymongo
 from aspen import Response
 
-^L
-server = request.path['server']
-database = request.path['database']
-collection = request.path['collection']
+[----]
+server = path['server']
+database = path['database']
+collection = path['collection']
 
 coll = pymongo.Connection(server, slave_okay=True)[database][collection]
 
@@ -37,7 +37,7 @@ else:
 
     raise Response(302, headers={'Location': './{}/1/'})
 
-^L
+[----]
 {% extends "base.html" %}
 {% block content %}
 <table>
