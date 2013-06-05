@@ -1,5 +1,3 @@
-bin
-include
-lib
-src
 *.pyc
+servers.txt
+env

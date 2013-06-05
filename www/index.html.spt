@@ -1,8 +1,15 @@
+import os
+
+servers_txt = os.path.join(website.project_root, 'servers.txt')
+
 [----]
-servers = 'localhost'
-servers = [server.strip(',') for server in servers.split()]
-servers = [server for server in servers if server]
+
+try:
+    servers = open(servers_txt).read().splitlines()
+except OSError:
+    servers = ['localhost']
 servers.sort()
+
 [----]
 {% extends "base.html" %}
 {% block content %}
