@@ -13,4 +13,6 @@ clean:
 	rm -rf env
 
 run: env
-	./env/bin/thrash ./env/bin/aspen -vDEBUG -a:29017 www/
+	./env/bin/aspen --network_address=127.0.0.1:29017 \
+				    --www_root=www/ \
+					--project_root=.

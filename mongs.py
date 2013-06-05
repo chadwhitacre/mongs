@@ -27,11 +27,11 @@ def commaize(n, places=1):
 def get_value(request):
     """Given a request object, return a value. Use for *.txt and *.json.
     """
-    server = request.path['server']
-    database = request.path['database']
-    collection = request.path['collection']
-    _id = request.path['filter']
-    key = request.path['value'] # derp
+    server = request.line.uri.path['server']
+    database = request.line.uri.path['database']
+    collection = request.line.uri.path['collection']
+    _id = request.line.uri.path['filter']
+    key = request.line.uri.path['value'] # derp
 
     db = pymongo.Connection(server, slave_okay=True)[database][collection]
 
