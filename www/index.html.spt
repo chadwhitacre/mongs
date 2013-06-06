@@ -6,7 +6,7 @@ servers_txt = os.path.join(website.project_root, 'servers.txt')
 
 try:
     servers = open(servers_txt).read().splitlines()
-except OSError:
+except IOError:
     servers = ['localhost']
 servers.sort()
 
