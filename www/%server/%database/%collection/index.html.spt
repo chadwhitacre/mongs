@@ -8,7 +8,7 @@ server = path['server']
 database = path['database']
 collection = path['collection']
 
-coll = pymongo.Connection(server, slave_okay=True)[database][collection]
+coll = pymongo.MongoClient(server)[database][collection]
 
 if collection == 'system.namespaces':
 

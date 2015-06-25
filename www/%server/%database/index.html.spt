@@ -31,13 +31,14 @@ class Collection(object):
         self.stats = stats = db.command({'collStats': collname})
         self.storage_size = float(stats['storageSize'])
         self.data_size = float(stats['size'])
+        self.indexes = [
+            Index(name=key, size=value)
+            for key, value in stats['indexSizes'].items()
+        ]
 
-        # I adapted this from the definition of db.foo.totalSize per the mongo
-        # js shell. I gather from there that indexes are just specially-named
-        # collections, and the same storageSize/dataSize semantics apply. I
-        # believe that the indexSizes attribute of collStats gives us dataSize.
-        index_names = stats['indexSizes'].keys()
-        self.indices = ["%s.$%s" % (collname, name) for name in index_names]
+    @property
+    def index_size(self):
+        return sum(index.storage_size for index in self.indexes)
 
     def format_storage_size(self, dbsize):
         total = f2s(dbsize, MB).replace("&nbsp;", "N")
@@ -64,14 +65,13 @@ class Collection(object):
 
 
 class Index(Collection):
-    """MongoDB indices are special collections.
-
-    The storageSize and dataSize semantics appear to be the same, so all of the
-    logic of the base class applies. We just want to format them differently in
-    the UI.
-
-    """
     is_index = True
+
+    def __init__(self, name, size):
+        self.name = name
+        self.storage_size = size
+        self.data_size = size
+
 
 # ==========================================================================
 # dodge weird 2.6 issue
@@ -83,7 +83,7 @@ class Index(Collection):
 
 server = path['server']
 database = path['database']
-db = pymongo.Connection(server, slave_okay=True)[database]
+db = pymongo.MongoClient(server)[database]
 
 
 # optimize
@@ -130,8 +130,6 @@ dbsize = 0.0
 
 rows = []
 collnames = db.collection_names()
-if collnames:
-    collnames += ['system.namespaces']
 
 # first build a list of collections, sorted by storage_size ascending
 for collname in collnames:
@@ -144,12 +142,8 @@ _rows = []
 while rows:
     collection = rows.pop()  # this has the effect of reversing rows
     _rows.append(collection)
-    indices = []
-    for indexname in collection.indices:
-        indices.append(Index(db, indexname))
-        dbsize += indices[-1].storage_size
-    indices.sort(key=lambda index: index.storage_size, reverse=True)
-    _rows.extend(indices)
+    _rows.extend(collection.indexes)
+    dbsize += collection.index_size
 rows = _rows
 
 
