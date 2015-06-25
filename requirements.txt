@@ -3,4 +3,4 @@
 ./vendor/tornado-1.2.1.tar.gz
 ./vendor/aspen-0.24.3.tar.gz
 ./vendor/simplejson-2.2.1.tar.gz
-./vendor/pymongo-2.5.2.tar.gz
+./vendor/pymongo-3.0.2.tar.gz
