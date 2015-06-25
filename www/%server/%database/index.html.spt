@@ -31,13 +31,8 @@ class Collection(object):
         self.stats = stats = db.command({'collStats': collname})
         self.storage_size = float(stats['storageSize'])
         self.data_size = float(stats['size'])
-
-        # I adapted this from the definition of db.foo.totalSize per the mongo
-        # js shell. I gather from there that indexes are just specially-named
-        # collections, and the same storageSize/dataSize semantics apply. I
-        # believe that the indexSizes attribute of collStats gives us dataSize.
-        index_names = stats['indexSizes'].keys()
-        self.indices = ["%s.$%s" % (collname, name) for name in index_names]
+        self.index_size = sum(stats['indexSizes'].values())
+        self.index_names = stats['indexSizes'].keys()
 
     def format_storage_size(self, dbsize):
         total = f2s(dbsize, MB).replace("&nbsp;", "N")
@@ -62,16 +57,6 @@ class Collection(object):
         out = out.replace("N", "&nbsp;")
         return out
 
-
-class Index(Collection):
-    """MongoDB indices are special collections.
-
-    The storageSize and dataSize semantics appear to be the same, so all of the
-    logic of the base class applies. We just want to format them differently in
-    the UI.
-
-    """
-    is_index = True
 
 # ==========================================================================
 # dodge weird 2.6 issue
@@ -142,12 +127,7 @@ _rows = []
 while rows:
     collection = rows.pop()  # this has the effect of reversing rows
     _rows.append(collection)
-    indices = []
-    for indexname in collection.indices:
-        indices.append(Index(db, indexname))
-        dbsize += indices[-1].storage_size
-    indices.sort(key=lambda index: index.storage_size, reverse=True)
-    _rows.extend(indices)
+    dbsize += collection.index_size
 rows = _rows
 
 
