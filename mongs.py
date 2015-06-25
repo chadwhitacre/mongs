@@ -33,7 +33,7 @@ def get_value(request):
     _id = request.line.uri.path['filter']
     key = request.line.uri.path['value'] # derp
 
-    db = pymongo.Connection(server, slave_okay=True)[database][collection]
+    db = pymongo.MongoClient(server)[database][collection]
 
     try:
         _id = ObjectId(_id)

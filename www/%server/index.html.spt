@@ -3,7 +3,7 @@ import pymongo
 [----]
 server = path['server']
 
-conn = pymongo.Connection(server, slave_okay=True)
+conn = pymongo.MongoClient(server)
 databases = sorted(conn.database_names(), key=lambda a: a.lower())
 
 [----]
