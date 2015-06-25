@@ -130,8 +130,6 @@ dbsize = 0.0
 
 rows = []
 collnames = db.collection_names()
-if collnames:
-    collnames += ['system.namespaces']
 
 # first build a list of collections, sorted by storage_size ascending
 for collname in collnames:
