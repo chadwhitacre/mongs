@@ -10,6 +10,5 @@ clean:
 	rm -rf env
 
 run: env
-	./env/bin/aspen --network_address=127.0.0.1:29017 \
-				    --www_root=www/ \
-					--project_root=.
+	ASPEN_WWW_ROOT=www ASPEN_PROJECT_ROOT=. PORT=29017 \
+		./env/bin/python -m aspen
