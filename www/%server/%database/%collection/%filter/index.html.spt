@@ -7,6 +7,7 @@ more like ziti. Alright, angelhair. Can you give me angelhair?
 import datetime
 import pprint
 import urllib
+import functools
 
 import mongs
 import pymongo
@@ -54,28 +55,23 @@ class Pair:
         self.link = link
 
 
-def NamespacePair(database):
-    # Have I ever done this before? I don't think I have.
+class NamespacePair(Pair):
+    """Represent the single pair of values for a system.namespaces entry.
+    """
+    def __init__(self, base, _id, k, v, database):
+        parts = v.split('.$')
+        if len(parts) == 1:
+            parts += ['']
+        namepart, indexpart = parts
+        if indexpart:
+            indexpart = ".$" + indexpart
+        collection = namepart[len(database)+1:]
+        value = '%s.<a href="../../../%s/">%s</a>%s'
+        value %= (database, collection, collection, indexpart)
 
-    class NamespacePair(Pair):
-        """Represent the single pair of values for a system.namespaces entry.
-        """
-        def __init__(self, base, _id, k, v):
-            parts = v.split('.$')
-            if len(parts) == 1:
-                parts += ['']
-            namepart, indexpart = parts
-            if indexpart:
-                indexpart = ".$" + indexpart
-            collection = namepart[len(database)+1:]
-            value = '%s.<a href="../../../%s/">%s</a>%s'
-            value %= (database, collection, collection, indexpart)
-
-            self.k = k
-            self.v = value
-            self.link = False
-
-    return NamespacePair
+        self.k = k
+        self.v = value
+        self.link = False
 
 
 [----]
@@ -97,7 +93,8 @@ filtered = single
 # If we are on system.namespaces we want to link to collections.
 
 if collection == 'system.namespaces':
-    Pair = NamespacePair(database)  # will insert hyperlinks to the collection
+    # will insert hyperlinks to the collection
+    Pair = functools.partial(NamespacePair, database=database)
 
 
 # Compute base, filter, and page.
