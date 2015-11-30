@@ -1,12 +1,9 @@
 env:
-	python2.7 ./vendor/virtualenv-1.6.4.py \
-				--no-site-packages \
-				--unzip-setuptools \
+	unzip -q -d vendor/virtualenv vendor/virtualenv*.whl
+	python ./vendor/virtualenv/virtualenv.py \
 				--prompt="[mongs] " \
-				--never-download \
-				--extra-search-dir=./vendor/ \
-				--distribute \
 				./env/
+	rm -R vendor/virtualenv
 	./env/bin/pip install -r requirements.txt
 
 clean:
