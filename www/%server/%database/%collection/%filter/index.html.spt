@@ -6,8 +6,13 @@ more like ziti. Alright, angelhair. Can you give me angelhair?
 """
 import datetime
 import pprint
-import urllib
 import functools
+
+try:
+    from urllib.parse import unquote
+except ImportError:
+    # Python 2
+    from urllib import unquote
 
 import mongs
 import pymongo
@@ -113,7 +118,7 @@ optimize_count = False # If we can, compute the count without filtering.
 if not single:      # /server/database/collection/filter/page/
     # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
-    filter = urllib.unquote(filter).strip()
+    filter = unquote(filter).strip()
     if filter:
         filtered = True
         if not filter.startswith('{'):
