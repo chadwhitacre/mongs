@@ -220,7 +220,7 @@ rows = _rows
     {% endif %}
     {% for row in rows %}
     <tr class="big collection listing{% if row.is_index %} index{% endif %}">
-        {% if loop.index0 == 0 %}<th rowspan="{{ len(rows) }}">
+        {% if loop.index0 == 0 %}<th rowspan="{{ rows|length }}">
             <span>
                 Collections
                 <span class="note">
