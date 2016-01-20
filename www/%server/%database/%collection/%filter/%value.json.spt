@@ -4,6 +4,6 @@ value = mongs.get_value(request)
 if isinstance(value, basestring):
     # Smartly send the user to a text/plain representation, so their in-browser
     # JSON prettifier doesn't choke.
-    path, ext, _ = path.raw.rpartition('.json')
+    path, ext, _ = request.line.uri.path.raw.rpartition('.json')
     request.redirect(path + ".txt")
 response.body = value

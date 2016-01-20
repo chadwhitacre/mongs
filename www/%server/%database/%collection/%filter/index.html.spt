@@ -84,11 +84,11 @@ class NamespacePair(Pair):
 # Parse input
 # ===========
 
-server = path['server']
-database = path['database']
-collection = path['collection']
-filter = path['filter']
-page = path.get('page', None)
+server = request.line.uri.path['server']
+database = request.line.uri.path['database']
+collection = request.line.uri.path['collection']
+filter = request.line.uri.path['filter']
+page = request.line.uri.path.get('page', None)
 single = page is None
 filtered = single
 

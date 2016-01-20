@@ -81,8 +81,8 @@ class Index(Collection):
 # parse and hydrate
 # =================
 
-server = path['server']
-database = path['database']
+server = request.line.uri.path['server']
+database = request.line.uri.path['database']
 db = pymongo.MongoClient(server)[database]
 
 

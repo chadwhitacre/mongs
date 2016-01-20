@@ -4,9 +4,9 @@ import pymongo
 from aspen import Response
 
 [----]
-server = path['server']
-database = path['database']
-collection = path['collection']
+server = request.line.uri.path['server']
+database = request.line.uri.path['database']
+collection = request.line.uri.path['collection']
 
 coll = pymongo.MongoClient(server)[database][collection]
 

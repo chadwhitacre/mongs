@@ -1,7 +1,7 @@
 import pymongo
 
 [----]
-server = path['server']
+server = request.line.uri.path['server']
 
 conn = pymongo.MongoClient(server)
 databases = sorted(conn.database_names(), key=lambda a: a.lower())
