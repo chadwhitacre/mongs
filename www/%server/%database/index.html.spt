@@ -218,9 +218,9 @@ rows = _rows
         <td style="color: #999;">No collections found.</td>
     </tr>
     {% endif %}
-    {% for i, row in enumerate(rows) %}
+    {% for row in rows %}
     <tr class="big collection listing{% if row.is_index %} index{% endif %}">
-        {% if i == 0 %}<th rowspan="{{ len(rows) }}">
+        {% if loop.index0 == 0 %}<th rowspan="{{ len(rows) }}">
             <span>
                 Collections
                 <span class="note">
@@ -232,12 +232,12 @@ rows = _rows
             </span>
         </th>{% endif %}
 
-        <td class="name{% if i > 0 %} notfirst{% endif %}">{% if not row.is_index %}<a
+        <td class="name{% if loop.index0 > 0 %} notfirst{% endif %}">{% if not row.is_index %}<a
             href="/{{ server }}/{{ database }}/{{ row.name }}/">{% endif %}{{ row.name }}{% if not row.is_index %}</
             a>{% endif %}</td>
-        <td class="storage_size{% if i > 0 %} notfirst{% endif %}">{{ row.format_storage_size(dbsize) }}</td>
-        <td class="data_size{% if i > 0 %} notfirst{% endif %}">{{ row.format_data_size(dbsize) }}</td>
-        <td class="empty{% if i > 0 %} notfirst{% endif %}"></td>
+        <td class="storage_size{% if loop.index0 > 0 %} notfirst{% endif %}">{{ row.format_storage_size(dbsize) }}</td>
+        <td class="data_size{% if loop.index0 > 0 %} notfirst{% endif %}">{{ row.format_data_size(dbsize) }}</td>
+        <td class="empty{% if loop.index0 > 0 %} notfirst{% endif %}"></td>
     </tr>
     {% endfor %}
 </table>
