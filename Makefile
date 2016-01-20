@@ -10,6 +10,4 @@ clean:
 	rm -rf env
 
 run: env
-	ASPEN_WWW_ROOT=www ASPEN_PROJECT_ROOT=. PORT=29017 \
-	ASPEN_RENDERER_DEFAULT=jinja2 \
-		./env/bin/python -m aspen
+	PORT=29017 env/bin/python launch.py
