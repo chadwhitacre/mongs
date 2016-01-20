@@ -6,8 +6,13 @@ more like ziti. Alright, angelhair. Can you give me angelhair?
 """
 import datetime
 import pprint
-import urllib
 import functools
+
+try:
+    from urllib.parse import unquote
+except ImportError:
+    # Python 2
+    from urllib import unquote
 
 import mongs
 import pymongo
@@ -79,11 +84,11 @@ class NamespacePair(Pair):
 # Parse input
 # ===========
 
-server = path['server']
-database = path['database']
-collection = path['collection']
-filter = path['filter']
-page = path.get('page', None)
+server = request.line.uri.path['server']
+database = request.line.uri.path['database']
+collection = request.line.uri.path['collection']
+filter = request.line.uri.path['filter']
+page = request.line.uri.path.get('page', None)
 single = page is None
 filtered = single
 
@@ -113,7 +118,7 @@ optimize_count = False # If we can, compute the count without filtering.
 if not single:      # /server/database/collection/filter/page/
     # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
-    filter = urllib.unquote(filter).strip()
+    filter = unquote(filter).strip()
     if filter:
         filtered = True
         if not filter.startswith('{'):
@@ -281,24 +286,24 @@ if document is not None: # XXX Can document ever be None?
     </tr>
     <tr class="big document">
         <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/"
-                    title="Click for All Documents">Document</a>{% else %}<span>Document{% end %}
+                    title="Click for All Documents">Document</a>{% else %}<span>Document{% endif %}
             <span class="note">highlight = <em>indexed</em></span>
         </th>
         <td>
             {% if single %}
             <a href="./">{{ _id }}</a>
             {% else %}
-            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% end %} |
+            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
             {{ page }} of {{ mongs.commaize(ndocs, places=0) }}
-            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% end %}
-            {% end %}
+            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
+            {% endif %}
         </td>
     </tr>
     {% for pair in pairs %}
     <tr class="attribute">
-        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% end %} {% if pair.is_filtered %}filtered{% end %}">{{ pair.k }}</span></span></th>
-        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% end %}</td>
+        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% endif %} {% if pair.is_filtered %}filtered{% endif %}">{{ pair.k }}</span></span></th>
+        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% endif %}</td>
     </tr>
-    {% end %}
+    {% endfor %}
 </table>
-{% end %}
+{% endblock %}

@@ -19,8 +19,8 @@ servers.sort()
         <td>
             {% for name in servers %}
             <a href="/{{ name }}/">{{ name }}</a><br />
-            {% end %}
+            {% endfor %}
         </td>
     </tr>
 </table>
-{% end %}
+{% endblock %}

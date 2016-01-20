@@ -81,8 +81,8 @@ class Index(Collection):
 # parse and hydrate
 # =================
 
-server = path['server']
-database = path['database']
+server = request.line.uri.path['server']
+database = request.line.uri.path['database']
 db = pymongo.MongoClient(server)[database]
 
 
@@ -201,7 +201,7 @@ rows = _rows
         <td class="storage_size">storageSize</td>
         <td class="data_size">dataSize</td>
         <td class="empty"></td>
-        {% end %}
+        {% endif %}
     </tr>
     <tr class="big database">
         <th><a href="/{{ server }}/" title="Click for All Databases">Database</a></th>
@@ -210,17 +210,17 @@ rows = _rows
         <td class="storage_size">{{ f2s(dbsize, MB) }} MB&nbsp;&nbsp;%&nbsp;&nbsp;</td>
         <td class="data_size">%</td>
         <td class="empty"></td>
-        {% end %}
+        {% endif %}
     </tr>
     {% if not rows %}
     <tr class="big collection listing">
         <th><span>Collections</span></th>
         <td style="color: #999;">No collections found.</td>
     </tr>
-    {% end %}
-    {% for i, row in enumerate(rows) %}
-    <tr class="big collection listing{% if row.is_index %} index{% end %}">
-        {% if i == 0 %}<th rowspan="{{ len(rows) }}">
+    {% endif %}
+    {% for row in rows %}
+    <tr class="big collection listing{% if row.is_index %} index{% endif %}">
+        {% if loop.index0 == 0 %}<th rowspan="{{ rows|length }}">
             <span>
                 Collections
                 <span class="note">
@@ -230,15 +230,15 @@ rows = _rows
                     total storageSize<br />
                     as the base</span>
             </span>
-        </th>{% end %}
+        </th>{% endif %}
 
-        <td class="name{% if i > 0 %} notfirst{% end %}">{% if not row.is_index %}<a
-            href="/{{ server }}/{{ database }}/{{ row.name }}/">{% end %}{{ row.name }}{% if not row.is_index %}</
-            a>{% end %}</td>
-        <td class="storage_size{% if i > 0 %} notfirst{% end %}">{{ row.format_storage_size(dbsize) }}</td>
-        <td class="data_size{% if i > 0 %} notfirst{% end %}">{{ row.format_data_size(dbsize) }}</td>
-        <td class="empty{% if i > 0 %} notfirst{% end %}"></td>
+        <td class="name{% if loop.index0 > 0 %} notfirst{% endif %}">{% if not row.is_index %}<a
+            href="/{{ server }}/{{ database }}/{{ row.name }}/">{% endif %}{{ row.name }}{% if not row.is_index %}</
+            a>{% endif %}</td>
+        <td class="storage_size{% if loop.index0 > 0 %} notfirst{% endif %}">{{ row.format_storage_size(dbsize) }}</td>
+        <td class="data_size{% if loop.index0 > 0 %} notfirst{% endif %}">{{ row.format_data_size(dbsize) }}</td>
+        <td class="empty{% if loop.index0 > 0 %} notfirst{% endif %}"></td>
     </tr>
-    {% end %}
+    {% endfor %}
 </table>
-{% end %}
+{% endblock %}
