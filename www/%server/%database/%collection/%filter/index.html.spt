@@ -286,24 +286,24 @@ if document is not None: # XXX Can document ever be None?
     </tr>
     <tr class="big document">
         <th>{% if filtered %}<span><a href="/{{ server }}/{{ database }}/{{ collection }}/"
-                    title="Click for All Documents">Document</a>{% else %}<span>Document{% end %}
+                    title="Click for All Documents">Document</a>{% else %}<span>Document{% endif %}
             <span class="note">highlight = <em>indexed</em></span>
         </th>
         <td>
             {% if single %}
             <a href="./">{{ _id }}</a>
             {% else %}
-            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% end %} |
+            {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
             {{ page }} of {{ mongs.commaize(ndocs, places=0) }}
-            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% end %}
-            {% end %}
+            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
+            {% endif %}
         </td>
     </tr>
     {% for pair in pairs %}
     <tr class="attribute">
-        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% end %} {% if pair.is_filtered %}filtered{% end %}">{{ pair.k }}</span></span></th>
-        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% end %}</td>
+        <th><span><span class="inner {{ pair.sort }} {% if pair.is_indexed %}indexed{% endif %} {% if pair.is_filtered %}filtered{% endif %}">{{ pair.k }}</span></span></th>
+        <td>{% if pair.link %}<a href="{{ pair.link }}">{{ pair.v }}</a>{% else %}{{ pair.v }}{% endif %}</td>
     </tr>
-    {% end %}
+    {% endfor %}
 </table>
-{% end %}
+{% endblock %}

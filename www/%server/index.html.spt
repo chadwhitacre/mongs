@@ -16,8 +16,8 @@ databases = sorted(conn.database_names(), key=lambda a: a.lower())
         <td>
             {% for database in databases %}
             <a href="/{{ server }}/{{ database }}/">{{ database }}</a><br />
-            {% end %}
+            {% endfor %}
         </td>
     </tr>
 </table>
-{% end %}
+{% endblock %}

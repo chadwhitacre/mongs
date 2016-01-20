@@ -60,4 +60,4 @@ else:
         <td>No documents found.</td>
     </tr>
 </table>
-{% end %}
+{% endblock %}
