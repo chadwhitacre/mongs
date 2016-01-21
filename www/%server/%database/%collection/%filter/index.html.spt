@@ -33,9 +33,6 @@ class Pair:
         escape = True
         if isinstance(v, bson.Binary):
             v = repr(v)
-        if isinstance(v, unicode):
-            # lists and dictionaries work for some reason
-            v = v.encode('ASCII', 'replace')
         if isinstance(v, ObjectId):
             v = '%s (%s)' % (v, v.generation_time)
         if isinstance(v, datetime.datetime):
