@@ -16,6 +16,7 @@ except ImportError:
 
 import mongs
 import pymongo
+import bson
 from aspen import json, Response
 from bson.objectid import ObjectId, InvalidId
 
@@ -30,6 +31,8 @@ class Pair:
 
     def __init__(self, base, _id, k, v):
         escape = True
+        if isinstance(v, bson.Binary):
+            v = repr(v)
         if isinstance(v, unicode):
             # lists and dictionaries work for some reason
             v = v.encode('ASCII', 'replace')
