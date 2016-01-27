@@ -8,11 +8,7 @@ import datetime
 import pprint
 import functools
 
-try:
-    from urllib.parse import unquote
-except ImportError:
-    # Python 2
-    from urllib import unquote
+from six.moves import urllib
 
 import mongs
 import pymongo
@@ -118,7 +114,7 @@ optimize_count = False # If we can, compute the count without filtering.
 if not single:      # /server/database/collection/filter/page/
     # Parse the filter as JSON, possibly base64-encoded.
     base = '../..'
-    filter = unquote(filter).strip()
+    filter = urllib.parse.unquote(filter).strip()
     if filter:
         filtered = True
         if not filter.startswith('{'):
