@@ -8,6 +8,7 @@ import datetime
 import pprint
 import functools
 
+import six
 from six.moves import urllib
 
 import mongs
@@ -36,7 +37,7 @@ class Pair:
         if isinstance(v, (int, float)):
             v = "<code>%s</code>" % v
             escape = False
-        nv = len(str(v))
+        nv = len(six.text_type(v))
         link = ''
         if k == '_id':
             link = "%s/%s/" % (base, _id)
