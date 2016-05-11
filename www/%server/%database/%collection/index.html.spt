@@ -25,7 +25,7 @@ else:
     documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
 
 try:
-    document = documents.next()
+    next(documents)
 except StopIteration:
     pass
 else:
