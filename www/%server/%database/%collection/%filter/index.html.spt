@@ -111,10 +111,6 @@ else:               # /server/database/collection/_id/
         pass
     filter = {"_id": _id}
 
-if '_id' not in filter:
-    # I'm sorry, I forget why I did this. :^(
-    filter.update({'_id': {'$exists': True}})
-
 
 # Sort.
 # =====
@@ -122,8 +118,7 @@ if '_id' not in filter:
 # MongoDB query spec. Pull sort out after the filter has been decoded but
 # before we actually use it.
 
-default_sort = [("id", 1)]
-sort = filter.pop('sort', default_sort)
+sort = filter.pop('sort', None)
 
 
 # Load documents.
@@ -141,7 +136,8 @@ documents.rewind()
 # Sort.
 # =====
 
-documents.sort(sort)
+if sort:
+    documents.sort(sort)
 
 
 # Compute prev/next.
