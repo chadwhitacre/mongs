@@ -57,25 +57,6 @@ class Pair:
         self.link = link
 
 
-class NamespacePair(Pair):
-    """Represent the single pair of values for a system.namespaces entry.
-    """
-    def __init__(self, base, _id, k, v, database):
-        parts = v.split('.$')
-        if len(parts) == 1:
-            parts += ['']
-        namepart, indexpart = parts
-        if indexpart:
-            indexpart = ".$" + indexpart
-        collection = namepart[len(database)+1:]
-        value = '%s.<a href="../../../%s/">%s</a>%s'
-        value %= (database, collection, collection, indexpart)
-
-        self.k = k
-        self.v = value
-        self.link = False
-
-
 [----]
 
 # Parse input
@@ -88,15 +69,6 @@ filter = request.line.uri.path['filter']
 page = request.line.uri.path.get('page', None)
 single = page is None
 filtered = single
-
-
-# Pair class.
-# ===========
-# If we are on system.namespaces we want to link to collections.
-
-if collection == 'system.namespaces':
-    # will insert hyperlinks to the collection
-    Pair = functools.partial(NamespacePair, database=database)
 
 
 # Compute base, filter, and page.
@@ -128,15 +100,6 @@ if not single:      # /server/database/collection/filter/page/
         # unfiltered collection, which appears to be O(1) instead of O(N).
         optimize_count = True
 
-elif collection == 'system.namespaces':
-                    # /server/database/system.namespaces/collection/
-
-    # Special case for system.namespaces. The _id is actually the
-    # fully-qualified name of a collection or index. Send them to the
-    # collection!
-    collection = filter.split('$')[0][len(database)+1:]
-    raise Response(301, headers=[('Location', '../../%s/' % collection)])
-
 else:               # /server/database/collection/_id/
     # Convert a request for a specific _id into a filter with one page.
     page = 1
@@ -148,10 +111,7 @@ else:               # /server/database/collection/_id/
         pass
     filter = {"_id": _id}
 
-if collection == 'system.namespaces':
-    # special case for MongoDB's collection of collections; docs have no _id
-    pass
-else:
+if True:
     if '_id' not in filter:
         # I'm sorry, I forget why I did this. :^(
         filter.update({'_id': {'$exists': True}})
@@ -165,9 +125,6 @@ else:
 
 if 'sort' in filter:
     sort = filter.pop('sort')
-elif collection == 'system.namespaces':
-    # special case; this has no _id, only name
-    sort = [("name", 1)]
 else:
     sort = [("_id", 1)]
 
@@ -187,20 +144,7 @@ documents.rewind()
 # Sort.
 # =====
 
-if collection == 'system.namespaces' and ndocs > 1024:
-
-    # Special case. It is possible to index system.namespaces, but no one is
-    # really going to have done that. Only sort if there's a small number of
-    # collections.
-    #
-    # The next step would be to check for the presence of an index. I think
-    # MongoDB actually does this internally (refuses to sort if the result set
-    # is too large and there's no index), but I think it still degrades
-    # performance.
-
-    pass
-
-else:
+if True:
     documents.sort(sort)
 
 

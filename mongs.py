@@ -148,22 +148,4 @@ def has_documents(coll):
     """
     Return a boolean for the presence of documents in the collection.
     """
-    if coll.name == 'system.namespaces':
-
-        # Special case. This collection holds the names of all other collections in
-        # this database. Users can access it directly for any database. For
-        # databases with more than a few collections we enforce that users browse
-        # collections using this interface rather than calling collection_names.
-
-        documents = coll.find()
-        if documents.count() < 1024:  # assume that system.namespaces isn't indexed
-            documents.sort('name', pymongo.ASCENDING)
-    else:
-        # This is a query for a "normal" collection.
-        documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
-
-    try:
-        next(documents)
-        return True
-    except StopIteration:
-        return False
+    return bool(coll.count())

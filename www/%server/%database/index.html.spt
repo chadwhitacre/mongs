@@ -86,16 +86,6 @@ database = request.line.uri.path['database']
 db = pymongo.MongoClient(server)[database]
 
 
-# optimize
-# ========
-# The collection_names API call is unsuitable for databases with many
-# collections. In such cases we require the user to browse the collections via
-# the system.namespaces meta-collection.
-
-if db['system.namespaces'].count() > 256:
-    raise Response(302, headers=[('Location', './system.namespaces/')])
-
-
 # dbsize
 # ======
 # We need the disk size of the database as a whole in order to calculate
