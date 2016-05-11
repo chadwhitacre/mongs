@@ -111,10 +111,9 @@ else:               # /server/database/collection/_id/
         pass
     filter = {"_id": _id}
 
-if True:
-    if '_id' not in filter:
-        # I'm sorry, I forget why I did this. :^(
-        filter.update({'_id': {'$exists': True}})
+if '_id' not in filter:
+    # I'm sorry, I forget why I did this. :^(
+    filter.update({'_id': {'$exists': True}})
 
 
 # Sort.
@@ -144,8 +143,7 @@ documents.rewind()
 # Sort.
 # =====
 
-if True:
-    documents.sort(sort)
+documents.sort(sort)
 
 
 # Compute prev/next.
