@@ -144,3 +144,8 @@ def dt2age(dt):
     fmt = 'in {age}' if dt > now else '{age} ago'
     return fmt.format(age=age)
 
+def has_documents(coll):
+    """
+    Return a boolean for the presence of documents in the collection.
+    """
+    return bool(coll.count())

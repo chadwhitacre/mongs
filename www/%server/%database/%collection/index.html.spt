@@ -2,6 +2,7 @@
 """
 import pymongo
 from aspen import Response
+import mongs
 
 [----]
 server = request.line.uri.path['server']
@@ -10,32 +11,9 @@ collection = request.line.uri.path['collection']
 
 coll = pymongo.MongoClient(server)[database][collection]
 
-if collection == 'system.namespaces':
-
-    # Special case. This collection holds the names of all other collections in
-    # this database. Users can access it directly for any database. For
-    # databases with more than a few collections we enforce that users browse
-    # collections using this interface rather than calling collection_names.
-
-    documents = coll.find()
-    if documents.count() < 1024:  # assume that system.namespaces isn't indexed
-        documents.sort('name', pymongo.ASCENDING)
-else:
-    # This is a query for a "normal" collection.
-    documents = coll.find({'_id': {'$exists': True}}).sort('_id', pymongo.ASCENDING)
-
-try:
-    document = documents.next()
-except StopIteration:
-    pass
-else:
-
+if mongs.has_documents(coll):
     # Redirect users to the first document in this collection.
-    # ========================================================
-    # Aspen as of 0.10.8 chokes on empty path parts, so we have to indicate
-    # an empty filter with explicit braces.
-
-    raise Response(302, headers={'Location': './{}/1/'})
+    raise Response(302, headers={'Location': './/1/'})
 
 [----]
 {% extends "base.html" %}
