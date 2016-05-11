@@ -122,10 +122,8 @@ if '_id' not in filter:
 # MongoDB query spec. Pull sort out after the filter has been decoded but
 # before we actually use it.
 
-if 'sort' in filter:
-    sort = filter.pop('sort')
-else:
-    sort = [("_id", 1)]
+default_sort = [("id", 1)]
+sort = filter.pop('sort', default_sort)
 
 
 # Load documents.
