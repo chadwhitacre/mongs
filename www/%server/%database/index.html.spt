@@ -33,7 +33,7 @@ class Collection(object):
         self.data_size = float(stats['size'])
         self.indexes = [
             Index(name=key, size=value)
-            for key, value in stats['indexSizes'].items()
+            for key, value in stats.get('indexSizes', {}).items()
         ]
 
     @property
