@@ -24,6 +24,19 @@ def commaize(n, places=1):
     return out
 
 
+def get_single_document_filter(_id):
+    filter = {"_id": {"$in": [_id]}}
+    try:
+        # Under some combination of MongoDB/PyMongo versions, this is
+        # necessary.
+        object_id = ObjectId(_id)
+    except InvalidId:
+        pass
+    else:
+        filter['_id']['$in'].append(object_id)
+    return filter
+
+
 def get_value(request):
     """Given a request object, return a value. Use for *.txt and *.json.
     """
@@ -34,12 +47,8 @@ def get_value(request):
     key = request.line.uri.path['value'] # derp
 
     db = pymongo.MongoClient(server)[database][collection]
-
-    try:
-        _id = ObjectId(_id)
-    except InvalidId:
-        pass
-    document = db.find_one(_id)
+    filter = get_single_document_filter(_id)
+    document = db.find_one(filter)
     return document[key]
 
 

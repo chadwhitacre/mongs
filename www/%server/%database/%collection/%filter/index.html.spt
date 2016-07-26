@@ -104,16 +104,7 @@ else:               # /server/database/collection/_id/
     # Convert a request for a specific _id into a filter with one page.
     page = 1
     base = '..'
-    _id = filter
-    filter = {"_id": {"$in": [_id]}}
-    try:
-        # Under some combination of MongoDB/PyMongo versions, this is
-        # necessary.
-        object_id = ObjectId(_id)
-    except InvalidId:
-        pass
-    else:
-        filter['_id']['$in'].append(object_id)
+    filter = mongs.get_single_document_filter(filter)
 
 
 # Sort.
