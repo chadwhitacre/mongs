@@ -105,11 +105,15 @@ else:               # /server/database/collection/_id/
     page = 1
     base = '..'
     _id = filter
+    filter = {"_id": {"$in": [_id]}}
     try:
-        _id = ObjectId(_id)
+        # Under some combination of MongoDB/PyMongo versions, this is
+        # necessary.
+        object_id = ObjectId(_id)
     except InvalidId:
         pass
-    filter = {"_id": _id}
+    else:
+        filter['_id']['$in'].append(object_id)
 
 
 # Sort.
