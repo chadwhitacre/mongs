@@ -1,6 +1,6 @@
 env:
 	unzip -q -d vendor/virtualenv vendor/virtualenv*.whl
-	python2 ./vendor/virtualenv/virtualenv.py \
+	python ./vendor/virtualenv/virtualenv.py --python=python2.7 \
 				--prompt="[mongs] " \
 				./env/
 	rm -R vendor/virtualenv
