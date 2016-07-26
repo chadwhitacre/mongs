@@ -104,12 +104,7 @@ else:               # /server/database/collection/_id/
     # Convert a request for a specific _id into a filter with one page.
     page = 1
     base = '..'
-    _id = filter
-    try:
-        _id = ObjectId(_id)
-    except InvalidId:
-        pass
-    filter = {"_id": _id}
+    filter = mongs.get_single_document_filter(filter)
 
 
 # Sort.
