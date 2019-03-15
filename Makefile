@@ -1,13 +1,9 @@
-env:
-	unzip -q -d vendor/virtualenv vendor/virtualenv*.whl
-	python ./vendor/virtualenv/virtualenv.py --python=python2.7 \
-				--prompt="[mongs] " \
-				./env/
-	rm -R vendor/virtualenv
-	./env/bin/pip install -r requirements.txt
+.tox/python:
+	python3 -m venv .tox/python
+	.tox/python/bin/pip install -r requirements.txt
 
 clean:
-	rm -rf env
+	rm -rf .tox
 
-run: env
-	PORT=29017 env/bin/python launch.py
+run: .tox/python
+	ASPEN_WWW_ROOT=www PORT=8080 .tox/python/bin/python -m pando
