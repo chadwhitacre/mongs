@@ -14,7 +14,7 @@ from six.moves import urllib
 import mongs
 import pymongo
 import bson
-from aspen import json, Response
+from pando import json, Response
 from bson.objectid import ObjectId, InvalidId
 
 SIZE_THRESHOLD = 2048 # number of bytes above which we link out
@@ -45,7 +45,7 @@ class Pair:
             v = "%d bytes" % nv
             link = "%s/%s/%s.json" % (base, _id, k)
         else:
-            if not isinstance(v, basestring):
+            if not isinstance(v, six.string_types):
                 v = pprint.pformat(v, indent=1)
             if escape:
                 v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -171,7 +171,7 @@ if document is not None: # XXX Can document ever be None?
     def generate_pairs(document):
         """Yield key/value pairs for document.
         """
-        for k,v in sorted(document.iteritems()):
+        for k,v in sorted(document.items()):
             pair = Pair(base, _id, k, v)
             pair.is_filtered = False
             pair.is_indexed = pair.k in indexed
