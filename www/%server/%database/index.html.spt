@@ -3,7 +3,6 @@
 import math
 
 import pymongo
-from aspen import Response
 from mongs import commaize
 
 
@@ -81,8 +80,8 @@ class Index(Collection):
 # parse and hydrate
 # =================
 
-server = request.line.uri.path['server']
-database = request.line.uri.path['database']
+server = request.path['server']
+database = request.path['database']
 db = pymongo.MongoClient(server)[database]
 
 

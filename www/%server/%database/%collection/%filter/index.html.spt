@@ -7,14 +7,12 @@ more like ziti. Alright, angelhair. Can you give me angelhair?
 import datetime
 import pprint
 import functools
-
-import six
-from six.moves import urllib
+import urllib.parse
 
 import mongs
 import pymongo
 import bson
-from aspen import json, Response
+from pando import json, Response
 from bson.objectid import ObjectId, InvalidId
 
 SIZE_THRESHOLD = 2048 # number of bytes above which we link out
@@ -37,7 +35,7 @@ class Pair:
         if isinstance(v, (int, float)):
             v = "<code>%s</code>" % v
             escape = False
-        nv = len(six.text_type(v))
+        nv = len(str(v))
         link = ''
         if k == '_id':
             link = "%s/%s/" % (base, _id)
@@ -45,7 +43,7 @@ class Pair:
             v = "%d bytes" % nv
             link = "%s/%s/%s.json" % (base, _id, k)
         else:
-            if not isinstance(v, basestring):
+            if not isinstance(v, (str, bytes)):
                 v = pprint.pformat(v, indent=1)
             if escape:
                 v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
@@ -62,11 +60,11 @@ class Pair:
 # Parse input
 # ===========
 
-server = request.line.uri.path['server']
-database = request.line.uri.path['database']
-collection = request.line.uri.path['collection']
-filter = request.line.uri.path['filter']
-page = request.line.uri.path.get('page', None)
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
+filter = request.path['filter']
+page = request.path.get('page', None)
 single = page is None
 filtered = single
 
@@ -139,11 +137,11 @@ if sort:
 # ==================
 
 prev = None # or int
-next = None # or int
+next_ = None # or int
 if page > 1:
     prev = page - 1
 if page < ndocs:
-    next = page + 1
+    next_ = page + 1
 
 
 # Advance the cursor to the requested document.
@@ -151,7 +149,7 @@ if page < ndocs:
 # This appears to be O(N), which means it is fast for early pages and slow for
 # late pages.
 
-document = documents.skip(page - 1).next()
+document = next(documents.skip(page - 1))
 
 
 # Compute a set of indexed keys.
@@ -171,7 +169,7 @@ if document is not None: # XXX Can document ever be None?
     def generate_pairs(document):
         """Yield key/value pairs for document.
         """
-        for k,v in sorted(document.iteritems()):
+        for k,v in sorted(document.items()):
             pair = Pair(base, _id, k, v)
             pair.is_filtered = False
             pair.is_indexed = pair.k in indexed
@@ -187,7 +185,7 @@ if document is not None: # XXX Can document ever be None?
         # that _id above the rest of the key/values. Advancing the pairs
         # generator here means that we don't display _id again with the
         # rest of the key/values.
-        pairs.next()
+        next(pairs)
 
 #============================================================================
 [----]
@@ -223,7 +221,7 @@ if document is not None: # XXX Can document ever be None?
             {% else %}
             {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
             {{ page }} of {{ mongs.commaize(ndocs, places=0) }}
-            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
+            | {% if next_ %} <a href="../{{ next_ }}/">next</a>{% else %}next{% endif %}
             {% endif %}
         </td>
     </tr>
