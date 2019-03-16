@@ -5,7 +5,7 @@ from bson import json_util
 import mongs
 [---]
 value = mongs.get_value(request)
-if isinstance(value, basestring):
+if isinstance(value, str):
     # Smartly send the user to a text/plain representation, so their in-browser
     # JSON prettifier doesn't choke.
     path, ext, _ = request.path.raw.rpartition('.json')
