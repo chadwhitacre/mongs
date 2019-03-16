@@ -40,11 +40,11 @@ def get_single_document_filter(_id):
 def get_value(request):
     """Given a request object, return a value. Use for *.txt and *.json.
     """
-    server = request.line.uri.path['server']
-    database = request.line.uri.path['database']
-    collection = request.line.uri.path['collection']
-    _id = request.line.uri.path['filter']
-    key = request.line.uri.path['value'] # derp
+    server = request.path['server']
+    database = request.path['database']
+    collection = request.path['collection']
+    _id = request.path['filter']
+    key = request.path['value'] # derp
 
     db = pymongo.MongoClient(server)[database][collection]
     filter = get_single_document_filter(_id)

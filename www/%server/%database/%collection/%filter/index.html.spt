@@ -62,11 +62,11 @@ class Pair:
 # Parse input
 # ===========
 
-server = request.line.uri.path['server']
-database = request.line.uri.path['database']
-collection = request.line.uri.path['collection']
-filter = request.line.uri.path['filter']
-page = request.line.uri.path.get('page', None)
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
+filter = request.path['filter']
+page = request.path.get('page', None)
 single = page is None
 filtered = single
 

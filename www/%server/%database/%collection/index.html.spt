@@ -5,9 +5,9 @@ from aspen import Response
 import mongs
 
 [----]
-server = request.line.uri.path['server']
-database = request.line.uri.path['database']
-collection = request.line.uri.path['collection']
+server = request.path['server']
+database = request.path['database']
+collection = request.path['collection']
 
 coll = pymongo.MongoClient(server)[database][collection]
 
