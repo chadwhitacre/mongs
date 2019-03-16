@@ -6,4 +6,4 @@ clean:
 	rm -rf .tox
 
 run: .tox/python
-	ASPEN_WWW_ROOT=www PORT=8080 .tox/python/bin/python -m pando
+	.tox/python/bin/python -m launch
