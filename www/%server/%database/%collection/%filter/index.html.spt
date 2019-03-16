@@ -7,9 +7,7 @@ more like ziti. Alright, angelhair. Can you give me angelhair?
 import datetime
 import pprint
 import functools
-
-import six
-from six.moves import urllib
+import urllib.parse
 
 import mongs
 import pymongo
@@ -37,7 +35,7 @@ class Pair:
         if isinstance(v, (int, float)):
             v = "<code>%s</code>" % v
             escape = False
-        nv = len(six.text_type(v))
+        nv = len(str(v))
         link = ''
         if k == '_id':
             link = "%s/%s/" % (base, _id)
@@ -45,7 +43,7 @@ class Pair:
             v = "%d bytes" % nv
             link = "%s/%s/%s.json" % (base, _id, k)
         else:
-            if not isinstance(v, six.string_types):
+            if not isinstance(v, (str, bytes)):
                 v = pprint.pformat(v, indent=1)
             if escape:
                 v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
