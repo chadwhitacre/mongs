@@ -137,11 +137,11 @@ if sort:
 # ==================
 
 prev = None # or int
-next = None # or int
+next_ = None # or int
 if page > 1:
     prev = page - 1
 if page < ndocs:
-    next = page + 1
+    next_ = page + 1
 
 
 # Advance the cursor to the requested document.
@@ -149,7 +149,7 @@ if page < ndocs:
 # This appears to be O(N), which means it is fast for early pages and slow for
 # late pages.
 
-document = documents.skip(page - 1).next()
+document = next(documents.skip(page - 1))
 
 
 # Compute a set of indexed keys.
@@ -185,7 +185,7 @@ if document is not None: # XXX Can document ever be None?
         # that _id above the rest of the key/values. Advancing the pairs
         # generator here means that we don't display _id again with the
         # rest of the key/values.
-        pairs.next()
+        next(pairs)
 
 #============================================================================
 [----]
@@ -221,7 +221,7 @@ if document is not None: # XXX Can document ever be None?
             {% else %}
             {% if prev %}<a class="prev" href="../{{ prev }}/">prev</a>{% else %}prev{% endif %} |
             {{ page }} of {{ mongs.commaize(ndocs, places=0) }}
-            | {% if next %} <a href="../{{ next }}/">next</a>{% else %}next{% endif %}
+            | {% if next_ %} <a href="../{{ next_ }}/">next</a>{% else %}next{% endif %}
             {% endif %}
         </td>
     </tr>
