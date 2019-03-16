@@ -40,5 +40,7 @@ if __name__ == '__main__':
         .format(host, port))
     website = website.Website(
         www_root='www',
+        renderer_default='jinja2',
+        project_root='.',
     )
     make_server(host, port, website).serve_forever()

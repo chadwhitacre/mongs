@@ -1,16 +1,11 @@
 import os
 
-servers_txt = os.path.join(website.project_root, 'servers.txt')
+servers = sorted(os.environ.get('SERVERS', 'localhost').split())
 
 [----]
 
-try:
-    servers = open(servers_txt).read().splitlines()
-except IOError:
-    servers = ['localhost']
-servers.sort()
-
 [----]
+
 {% extends "base.html" %}
 {% block content %}
 <table>
