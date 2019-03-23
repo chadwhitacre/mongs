@@ -52,21 +52,6 @@ def get_value(request):
     return document[key]
 
 
-def total_seconds(td):
-    """
-    Python 2.7 adds a total_seconds method to timedelta objects.
-    See http://docs.python.org/library/datetime.html#datetime.timedelta.total_seconds
-
-    This function is taken from https://bitbucket.org/jaraco/jaraco.compat/src/e5806e6c1bcb/py26compat/__init__.py#cl-26
-
-    """
-    try:
-        result = td.total_seconds()
-    except AttributeError:
-        result = (td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
-    return result
-
-
 def dt2age(dt):
     """Given a Unix timestamp (UTC) or a datetime object, return an age string
     relative to now.
@@ -107,7 +92,7 @@ def dt2age(dt):
     # ===========================
 
     now = datetime.datetime.utcnow()
-    age = total_seconds(abs(now - dt))
+    age = abs(now - dt).total_seconds()
 
     # Convert it to a string.
     # =======================
