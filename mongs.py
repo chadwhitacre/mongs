@@ -44,7 +44,7 @@ def get_value(request):
     database = request.path['database']
     collection = request.path['collection']
     _id = request.path['filter']
-    key = request.path['value'] # derp
+    key = request.path['value']  # derp
 
     db = pymongo.MongoClient(server)[database][collection]
     filter = get_single_document_filter(_id)
@@ -92,18 +92,16 @@ def dt2age(dt):
     if not isinstance(dt, datetime.datetime):
         dt = datetime.datetime.utcfromtimestamp(dt)
 
-
     # Define some helpful constants.
     # ==============================
 
-    sec =   1
-    min =  60 * sec
-    hr  =  60 * min
-    day =  24 * hr
-    wk  =   7 * day
-    mn  =   4 * wk
-    yr  = 365 * day
-
+    sec = 1
+    min = 60 * sec
+    hr = 60 * min
+    day = 24 * hr
+    wk = 7 * day
+    mn = 4 * wk
+    yr = 365 * day
 
     # Get the raw age in seconds.
     # ===========================
@@ -111,11 +109,10 @@ def dt2age(dt):
     now = datetime.datetime.utcnow()
     age = total_seconds(abs(now - dt))
 
-
     # Convert it to a string.
     # =======================
-    # We start with the coarsest unit and filter to the finest. Pluralization is
-    # centralized.
+    # We start with the coarsest unit and filter
+    # to the finest. Pluralization is centralized.
 
     if age < 1:
         return 'just a moment'
@@ -142,7 +139,6 @@ def dt2age(dt):
         amount = age
         unit = 'second'
 
-
     # Pluralize and return.
     # =====================
 
@@ -152,6 +148,7 @@ def dt2age(dt):
     age = ' '.join([str(amount), unit])
     fmt = 'in {age}' if dt > now else '{age} ago'
     return fmt.format(age=age)
+
 
 def has_documents(coll):
     """
