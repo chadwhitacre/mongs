@@ -26,7 +26,7 @@ class Pair:
 
     def __init__(self, base, _id, k, v):
         escape = True
-        if isinstance(v, bson.Binary):
+        if isinstance(v, (bson.Binary, bytes)):
             v = repr(v)
         if isinstance(v, ObjectId):
             v = '%s (%s)' % (v, v.generation_time)
@@ -43,7 +43,7 @@ class Pair:
             v = "%d bytes" % nv
             link = "%s/%s/%s.json" % (base, _id, k)
         else:
-            if not isinstance(v, (str, bytes)):
+            if not isinstance(v, str):
                 v = pprint.pformat(v, indent=1)
             if escape:
                 v = v.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
