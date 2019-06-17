@@ -2,6 +2,8 @@
 """
 import datetime
 import math
+import os
+import json
 
 import pymongo
 from bson.objectid import ObjectId, InvalidId
@@ -140,3 +142,11 @@ def has_documents(coll):
     Return a boolean for the presence of documents in the collection.
     """
     return bool(coll.count())
+
+
+def connect(server):
+    """
+    Allow SERVER_URIS to override the URI for a server.
+    """
+    full_uris = json.loads(os.environ.get('SERVER_URIS', '{}'))
+    return pymongo.MongoClient(full_uris.get(server, server))

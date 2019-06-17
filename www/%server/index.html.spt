@@ -1,9 +1,9 @@
-import pymongo
+import mongs
 
 [----]
 server = request.path['server']
 
-conn = pymongo.MongoClient(server)
+conn = mongs.connect(server)
 databases = sorted(conn.database_names(), key=lambda a: a.lower())
 
 [----]

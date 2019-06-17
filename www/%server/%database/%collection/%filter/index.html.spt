@@ -10,7 +10,6 @@ import functools
 import urllib.parse
 
 import mongs
-import pymongo
 import bson
 from pando import json, Response
 from bson.objectid import ObjectId, InvalidId
@@ -116,9 +115,8 @@ sort = filter.pop('sort', None)
 
 # Load documents.
 # ===============
-# pymongo.MongoClient advertises that it does connection pooling.
 
-coll = pymongo.MongoClient(server)[database][collection]
+coll = mongs.connect(server)[database][collection]
 documents = coll.find(filter)
 ndocs = coll.count() if optimize_count else documents.count()
 if (page < 1) or (page > ndocs):

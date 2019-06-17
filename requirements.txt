@@ -1,3 +1,4 @@
 pando
 pymongo
+dnspython
 aspen-jinja2

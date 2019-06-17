@@ -1,6 +1,5 @@
 """/server/database/collection/
 """
-import pymongo
 from pando import Response
 import mongs
 
@@ -9,7 +8,7 @@ server = request.path['server']
 database = request.path['database']
 collection = request.path['collection']
 
-coll = pymongo.MongoClient(server)[database][collection]
+coll = mongs.connect(server)[database][collection]
 
 if mongs.has_documents(coll):
     # Redirect users to the first document in this collection.

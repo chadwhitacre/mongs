@@ -3,6 +3,7 @@
 import math
 
 import pymongo
+import mongs
 from mongs import commaize
 
 
@@ -82,7 +83,7 @@ class Index(Collection):
 
 server = request.path['server']
 database = request.path['database']
-db = pymongo.MongoClient(server)[database]
+db = mongs.connect(server)[database]
 
 
 # dbsize
